@@ -23,6 +23,7 @@ public class SimEnvironment extends SimStateSweep {
     public String inputDataDirectory = "/Users/kaiyinlin/Desktop/dataByYear/";
     public boolean inputData = true;
     public boolean copyBack = true;
+    public boolean deleteFile = true; // delete alliance and year.csv file in the fileAddress after copy back to original directory
     public boolean appendInfo = true;
     public int year = 1816;
     public String dataName;
@@ -43,6 +44,13 @@ public class SimEnvironment extends SimStateSweep {
     public SimEnvironment(long seed, Class observer) {
         super(200, observer);
         // TODO Auto-generated constructor stub
+    }
+
+    public SimEnvironment(long seed, Class observer, String fileAddress, String inputDataDirectory){
+        super(200, observer);
+        setFileAddress(fileAddress);
+        setInputDataDirectory(inputDataDirectory);
+
     }
 
     /*
@@ -82,6 +90,7 @@ public class SimEnvironment extends SimStateSweep {
         dataName =  inputDataDirectory + Integer.toString(year) + ".csv";
         dataInput = new Input(dataName);
         this.dataInformation = dataInput.getDataInformation();
+        System.out.println("inputDataName = " + dataName);
 
         // set up output information
         appendYear = year + 1;
@@ -279,6 +288,10 @@ public class SimEnvironment extends SimStateSweep {
     public boolean isCopyBack() {
         return copyBack;
     }
+
+    public void setDeleteFile(boolean deleteFile){ this.deleteFile = deleteFile; }
+
+    public boolean isDeleteFile(){ return deleteFile; }
 
     public void setInputData(boolean inputData) {
         this.inputData = inputData;

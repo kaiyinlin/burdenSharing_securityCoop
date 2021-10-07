@@ -92,7 +92,12 @@ public class Experimenter extends Observer {
                     if (((SimEnvironment) state).appendInfo) {
                         appendInputInfo(this.fileDirectory, (SimEnvironment) state);
                     }
+                    if (((SimEnvironment) state).deleteFile){
+                        deleteFileInFileAddress((SimEnvironment) state);
+                    }
+//                    state.schedule.clear();
                     state.kill();
+                    state.finish();
                 }
             } else if (stateHasNoNewAllies == ((SimEnvironment) state).agentIdList.size()) {
                 converge++;
@@ -107,7 +112,12 @@ public class Experimenter extends Observer {
                     appendInputInfo(this.fileDirectory, (SimEnvironment) state);
                 }
                 System.out.println("Reach Maximum rounds! Terminate the simulation.");
+//                state.schedule.clear();
+                if (((SimEnvironment) state).deleteFile){
+                    deleteFileInFileAddress((SimEnvironment) state);
+                }
                 state.kill();
+                state.finish();
             }
 
             // schedule for next time
@@ -474,8 +484,25 @@ public class Experimenter extends Observer {
             Path originalPath = Paths.get(state.appendDataName);
             Files.copy(copied, originalPath, StandardCopyOption.REPLACE_EXISTING);
             System.out.println("copy to " + state.appendDataName);
-        }
 
+        }
+    }
+
+    public void deleteFileInFileAddress(SimEnvironment state) throws IOException {
+        if (state.deleteFile){
+            // list the file that needs to be deleted
+            Path outputFile = Paths.get(this.fileDirectory, state.appendYear + ".csv");
+            Files.delete(outputFile);
+            System.out.println("File " + outputFile.toString() + " deleted");
+
+            Path allianceFile = Paths.get(this.fileDirectory, fileName_alliance + ".csv");
+            Files.delete(allianceFile);
+            System.out.println("File " + allianceFile.toString() + " deleted");
+
+
+        }else{
+            System.out.println("No files are Deleted in " + state.fileAddress);
+        }
     }
 
     public ArrayList<Integer> commonAlliance(Agent a, Agent b) {

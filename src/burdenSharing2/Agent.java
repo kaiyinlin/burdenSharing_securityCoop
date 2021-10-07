@@ -369,6 +369,7 @@ public class Agent implements Steppable {
     public void provideOffer(SimEnvironment state, Agent allyJ) {
         boolean needMorePartners;
         if (currentUtility(state, this) >= 0)
+//        if (currentUtility(state, this) >= 0.2 || currentUtility(state, this) <= -0.2)
             needMorePartners = false;//if needMorePartners == false, then stop making friends
         else needMorePartners = true;
         int whileLoopNum = 0;
@@ -393,6 +394,7 @@ public class Agent implements Steppable {
                 potentialAllies.remove(allyJ.id); //remove the highest ranked ally from potentialAllies list
             }
             if (currentUtility(state, this) >= 0) needMorePartners = false;
+//            if (currentUtility(state, this) >= 0.2 || currentUtility(state, this) <= -0.2) needMorePartners = false;
             else needMorePartners = true;
             whileLoopNum++;
 
@@ -421,6 +423,7 @@ public class Agent implements Steppable {
                 return false;
             } else { //u_ji is greater than 0, check if this allyJ need more friends
                 if (currentUtility(state, allyJ) < 0) {  //need more friends
+//            	if (currentUtility(state, allyJ) <= 0.2 && currentUtility(state, allyJ) >= -0.2) {
                     //situation 3: accept the offer --> u_ji is greater than 0, and allyJ needs more allies
                     this.currentStepAlliance.add(allyJ.id);
                     allyJ.currentStepAlliance.add(this.id);
@@ -480,7 +483,7 @@ public class Agent implements Steppable {
         } else {
             Set<Integer> currentStateAlliance = Utils.getCurrentStateAlliance(state, a.id);
 //			System.out.println("currentStateAlliance = " + currentStateAlliance.toString());
-			a.cost = Math.pow(currentStateAlliance.size(), 2);
+			a.cost = Math.pow(currentStateAlliance.size(), 1.2);
             //calculate the sum of alliacne's utility
             for (int j : currentStateAlliance) {
                 double u_ij = a.utilityOfAll[state.getIndex(j)];

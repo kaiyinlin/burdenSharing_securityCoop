@@ -85,11 +85,11 @@ public class Utils {
         allEnemies = Stream.of(allEnemies, targetAgent.SRG).flatMap(x -> x.stream()).collect(Collectors.toSet());
 
         // adding all friends' enemies
-        for (int ii : allAlliances) {
-            Set<Integer> currentAgentEnemies = allAgents.get(ii).SRG;
-            allEnemies = Stream.of(allEnemies, currentAgentEnemies).flatMap(x -> x.stream())
-                    .collect(Collectors.toSet());
-        }
+//        for (int ii : allAlliances) {
+//            Set<Integer> currentAgentEnemies = allAgents.get(ii).SRG;
+//            allEnemies = Stream.of(allEnemies, currentAgentEnemies).flatMap(x -> x.stream())
+//                    .collect(Collectors.toSet());
+//        }
 
         // adding all enemies' friend
         for (int ii : targetAgent.SRG) {
@@ -113,12 +113,12 @@ public class Utils {
         // ------------------------------------------------------------------------------------
         // //
 
-        expandedEnemies = getExpandedEnemySet(allAgents, allEnemies);
-
-        while (setDifference(expandedEnemies, allEnemies).size() > 0) {
-            allEnemies = Stream.of(allEnemies, expandedEnemies).flatMap(x -> x.stream()).collect(Collectors.toSet());
-            expandedEnemies = getExpandedEnemySet(allAgents, allEnemies);
-        }
+//        expandedEnemies = getExpandedEnemySet(allAgents, allEnemies);
+//
+//        while (setDifference(expandedEnemies, allEnemies).size() > 0) {
+//            allEnemies = Stream.of(allEnemies, expandedEnemies).flatMap(x -> x.stream()).collect(Collectors.toSet());
+//            expandedEnemies = getExpandedEnemySet(allAgents, allEnemies);
+//        }
 
         return allEnemies;
     }
