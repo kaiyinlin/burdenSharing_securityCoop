@@ -21,8 +21,8 @@ import sim.util.Bag;
 import sweep.GUIStateSweep;
 
 /**
- * This is BurdenSharing2_2021-08-21, which update all matrix after each agent's move. Copy from 2021-08-17.
- * New: (1) adjust the parameters of u_ij (2)correct the equation of u_ij
+ * This is BurdenSharing2_2021-09-03, which update all matrix after each agent's move. Copy from 2021-08-21.
+ * New: (1) adjust the cost term of enemies only (2) use the original A_ij and A_kj parameters
  * 
  * @author kaiyinlin
  */
@@ -462,10 +462,15 @@ public class Agent implements Steppable {
         double sumU_ij = 0;
         double U = 0; //current utility
         Set<Integer> allEnemies = Utils.getAllEnemies(state, a.id);
-//		System.out.println("allSRG = " + allSRG.toString());
-        for (int e : allEnemies) {
-            Agent enemy = state.allAgents.get(e);
-            SRGcapability += enemy.capability;
+        Set<Integer> SRG = a.SRG;
+        Set<Integer> secondary = Utils.setDifference(allEnemies, SRG);
+        for (int p : SRG) {
+            Agent pri = state.allAgents.get(p);
+            SRGcapability += pri.capability;
+        }
+        for(int s : secondary) {
+        	Agent sec = state.allAgents.get(s);
+        	SRGcapability += 0.5 * sec.capability;
         }
 //		System.out.println("SRGcapability = " + SRGcapability);
         if (a.currentStepAlliance.size() == 0 && a.alliance.size() == 0) {
@@ -475,17 +480,16 @@ public class Agent implements Steppable {
         } else {
             Set<Integer> currentStateAlliance = Utils.getCurrentStateAlliance(state, a.id);
 //			System.out.println("currentStateAlliance = " + currentStateAlliance.toString());
+			a.cost = Math.pow(currentStateAlliance.size(), 2);
             //calculate the sum of alliacne's utility
             for (int j : currentStateAlliance) {
                 double u_ij = a.utilityOfAll[state.getIndex(j)];
                 sumU_ij += u_ij;
             }
-            U = a.capability + sumU_ij - 0.4 * a.cost - SRGcapability;
+            U = a.capability + sumU_ij - 0.2 * a.cost - SRGcapability;
 //			System.out.println("sumU_ij = " + sumU_ij + " a.cost = " + 0.2* a.cost);
 //			System.out.println("#" + a.id + "  has some allies and the current utility is " + U);
         }
-//		if (U < 0) return true; //need more allies
-//		else return false; //no need more allies
         return U;
     }
 

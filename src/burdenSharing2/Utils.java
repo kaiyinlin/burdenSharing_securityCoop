@@ -60,7 +60,7 @@ public class Utils {
     /*
      * Get the difference between two sets
      */
-    private static <T> Set<T> setDifference(final Set<T> setOne, final Set<T> setTwo) {
+    public static <T> Set<T> setDifference(final Set<T> setOne, final Set<T> setTwo) {
         Set<T> result = new HashSet<T>(setOne);
         result.removeAll(setTwo);
         return result;

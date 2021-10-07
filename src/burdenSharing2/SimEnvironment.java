@@ -41,7 +41,7 @@ public class SimEnvironment extends SimStateSweep {
      * *******************************************************************
      */
     public SimEnvironment(long seed, Class observer) {
-        super(100, observer);
+        super(200, observer);
         // TODO Auto-generated constructor stub
     }
 
