@@ -60,7 +60,7 @@ public class Utils {
     /*
      * Get the difference between two sets
      */
-    public static <T> Set<T> setDifference(final Set<T> setOne, final Set<T> setTwo) {
+    private static <T> Set<T> setDifference(final Set<T> setOne, final Set<T> setTwo) {
         Set<T> result = new HashSet<T>(setOne);
         result.removeAll(setTwo);
         return result;
@@ -220,7 +220,7 @@ public class Utils {
 //			u_ij = attractiveness(state, i, j) + prevention(state, i, j);
 //		}
 //		else {
-        u_ij = 0.4 * attractiveness(state, i, j) + 0.2 * prevention(state, i, j) + 0.4 * trust(state, i, j);
+        u_ij = j.capability * (0.4 * attractiveness(state, i, j) + 0.2 * prevention(state, i, j) + 0.4 * trust(state, i, j));
 //		}
 //		System.out.println("i.id = "+ i.id + "   j.id = "+ j.id + "   u_ij =" + u_ij + "   j.trust = " + trust(i,j));
         return u_ij;
@@ -256,9 +256,9 @@ public class Utils {
         }
 //		System.out.println("A_ij's EE = " + EE + "   Dj = " + Dj + "   S= " + S + "   NE = " + NE + "   T =" + T);
         if (i.democracy == true) { // if demo_i = 1
-            A_ij = j.capability * (0.2 * EE + 0.3 * Dj + 0.1 * S + 0.2 * NE + 0.2 * T);
+            A_ij = 0.2 * EE + 0.3 * Dj + 0.1 * S + 0.2 * NE + 0.2 * T;
         } else { // if demo_j = 0
-            A_ij = j.capability * (0.3 * EE + 0.1 * Dj + 0.1 * S + 0.3 * NE + 0.2 * T);
+            A_ij = 0.3 * EE + 0.1 * Dj + 0.1 * S + 0.3 * NE + 0.2 * T;
         }
 
 //		System.out.println("A_ij = " + A_ij);
@@ -300,9 +300,9 @@ public class Utils {
 //			}
 //			System.out.println("A_jk's EE = " + EE + "   Dj = " + Dj + "   S= " + S + "   NE = " + NE + "   T =" + T);
             if (i.democracy = true) { // if demo_i = 1
-                A_kj += j.capability * (0.2 * EE + 0.3 * Dj + 0.1 * S + 0.2 * NE + 0.2 * T);
+                A_kj += 0.2 * EE + 0.3 * Dj + 0.1 * S + 0.2 * NE + 0.2 * T;
             } else { // if demo_i = 0
-                A_kj += j.capability * (0.3 * EE + 0.1 * Dj + 0.1 * S + 0.3 * NE + 0.2 * T);
+                A_kj += 0.3 * EE + 0.1 * Dj + 0.1 * S + 0.3 * NE + 0.2 * T;
             }
 
         }
@@ -350,7 +350,7 @@ public class Utils {
     public static int[] convertSetToEnemyList(SimEnvironment state, Set<Integer> targetSet, int totalAgentCount, Set<Integer> originSRG) {
         int[] newList = new int[totalAgentCount];
         Arrays.fill(newList, 0);
-        for (int s : targetSet) {
+        for (int s : targetSet) { //all enemies
             newList[state.getIndex(s)] = 2;
         }
         for (int o : originSRG) {

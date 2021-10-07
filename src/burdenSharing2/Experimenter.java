@@ -39,7 +39,7 @@ public class Experimenter extends Observer {
     boolean headerWritten_u = false;
     boolean headerWritten_ALL = false;
 
-    String[] header_ALL = {"step", "year", "state_i", "state_j", "cap_i", "cap_j", "cultureSim", "democ_i", "democ_j", "neighbor", "enemy", "ally_ij", "u_ij"};
+    String[] header_ALL = {"step", "year", "state_i", "state_j", "cap_i", "cap_j", "cultureSim", "democ_i", "democ_j", "neighbor", "enemy", "ally_ij", "u_ij", "currentU"};
     int stateHasNoNewAllies; //a variable to detect whether the simulation is converged
 
     // convergence related variable
@@ -208,8 +208,8 @@ public class Experimenter extends Observer {
                 writer.append(Integer.toString(a.allianceList[bIndex]));//i's allies
                 writer.append(",");
                 writer.append(Double.toString(a.utilityOfAll[bIndex]));
-//                writer.append(",");
-//                writer.append(Double.toString(a.currentUtility(state, a))); //i's currentU
+                writer.append(",");
+                writer.append(Double.toString(a.currentUtility(state, a))); //i's currentU
                 writer.append('\n');
             }
         }

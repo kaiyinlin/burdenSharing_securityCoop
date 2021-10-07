@@ -21,10 +21,9 @@ import sim.util.Bag;
 import sweep.GUIStateSweep;
 
 /**
- * This is BurdenSharing2_2021-08-17, which update all matrix after each agent's move. Copy from 2021-08-01.
- * The simulation results were named as "test16", and the parameters of utility function is modified.
- * New: (1) add u_ij and year in output data (2) add year in UI (3)add the variable "appendInfo" for last year simulation
- *
+ * This is BurdenSharing2_2021-08-21, which update all matrix after each agent's move. Copy from 2021-08-17.
+ * New: (1) adjust the parameters of u_ij (2)correct the equation of u_ij
+ * 
  * @author kaiyinlin
  */
 public class Agent implements Steppable {
@@ -38,7 +37,7 @@ public class Agent implements Steppable {
     boolean democracy; //determine if a country is democratic or not
     //	boolean enemy;
     int culture;
-    int cost; //alliance cost depending on the number of allies
+    double cost; //alliance cost depending on the number of allies
     double[] attribute = new double[3];
     double orderingUtility;
 
@@ -425,8 +424,8 @@ public class Agent implements Steppable {
                     //situation 3: accept the offer --> u_ji is greater than 0, and allyJ needs more allies
                     this.currentStepAlliance.add(allyJ.id);
                     allyJ.currentStepAlliance.add(this.id);
-                    this.cost = currentStepAlliance.size() * currentStepAlliance.size();
-                    allyJ.cost = allyJ.currentStepAlliance.size() * allyJ.currentStepAlliance.size();
+                    this.cost = Math.pow(currentStepAlliance.size(), 2);
+                    allyJ.cost = Math.pow(allyJ.currentStepAlliance.size(), 2);
 //					System.out.println("Situation 3 (Acceptence): Recipient accept the offer based on need.");
 //					System.out.println("allyJ's allEnemies = " + Utils.getAllEnemies(state, allyJ.id).toString());
                     return true;
@@ -440,8 +439,8 @@ public class Agent implements Steppable {
 //							System.out.println("remove lowest ranked allies = " + currentLowestRanked.id);
                             this.currentStepAlliance.add(allyJ.id);
                             allyJ.currentStepAlliance.add(this.id);
-                            this.cost = currentStepAlliance.size() * currentStepAlliance.size();
-                            allyJ.cost = allyJ.currentStepAlliance.size() * allyJ.currentStepAlliance.size();
+                            this.cost = Math.pow(currentStepAlliance.size(), 2);
+                            allyJ.cost = Math.pow(allyJ.currentStepAlliance.size(), 2);
 //							System.out.println("Situation 4 (Acceptence): Recipient replaces current lowest ally and accept the offer");
 //							System.out.println("allyJ's allEnemies = " + Utils.getAllEnemies(state, allyJ.id).toString());
                             return true;
@@ -463,15 +462,10 @@ public class Agent implements Steppable {
         double sumU_ij = 0;
         double U = 0; //current utility
         Set<Integer> allEnemies = Utils.getAllEnemies(state, a.id);
-        Set<Integer> SRG = a.SRG;
-        Set<Integer> secondary = Utils.setDifference(allEnemies, SRG);
-        for (int p : SRG) {
-            Agent pri = state.allAgents.get(p);
-            SRGcapability += pri.capability;
-        }
-        for(int s : secondary) {
-        	Agent sec = state.allAgents.get(s);
-        	SRGcapability += 0.5 * sec.capability;
+//		System.out.println("allSRG = " + allSRG.toString());
+        for (int e : allEnemies) {
+            Agent enemy = state.allAgents.get(e);
+            SRGcapability += enemy.capability;
         }
 //		System.out.println("SRGcapability = " + SRGcapability);
         if (a.currentStepAlliance.size() == 0 && a.alliance.size() == 0) {
@@ -486,7 +480,7 @@ public class Agent implements Steppable {
                 double u_ij = a.utilityOfAll[state.getIndex(j)];
                 sumU_ij += u_ij;
             }
-            U = a.capability + sumU_ij - 0.2 * a.cost - SRGcapability;
+            U = a.capability + sumU_ij - 0.4 * a.cost - SRGcapability;
 //			System.out.println("sumU_ij = " + sumU_ij + " a.cost = " + 0.2* a.cost);
 //			System.out.println("#" + a.id + "  has some allies and the current utility is " + U);
         }
