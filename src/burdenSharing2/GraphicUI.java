@@ -1,9 +1,23 @@
 package burdenSharing2;
 
 import java.awt.Color;
+import java.net.URL;
 
+
+import sim.display.Console;
+import sim.display.Controller;
+import sim.display.Display2D;
+import sim.engine.SimState;
+import sim.portrayal.grid.ObjectGridPortrayal2D;
+import sim.portrayal.simple.OvalPortrayal2D;
+import sim.util.Bag;
+import sim.util.media.chart.HistogramGenerator;
+import sim.util.media.chart.TimeSeriesChartGenerator;
+import spaces.Spaces;
 import sweep.GUIStateSweep;
 import sweep.SimStateSweep;
+
+import javax.swing.*;
 
 public class GraphicUI extends GUIStateSweep {
 
@@ -13,24 +27,30 @@ public class GraphicUI extends GUIStateSweep {
 		// TODO Auto-generated constructor stub
 	}
 
-//	public static void main(String[] args) {
-//		/*
-//		Set all arguments from java inputs
-//		 */
-//		String inputDataDirectory = "/Users/chih-hsinhsueh/Documents/KaiYin/dataByYear/";
-//		String fileAddress = "/Users/chih-hsinhsueh/Desktop/test1/";
-//
-////		SimEnvironment simEnvironment = new SimEnvironment(200, Experimenter.class, fileAddress, inputDataDirectory);
-//		SimEnvironment simEnvironment = new SimEnvironment(200, Experimenter.class);
-//		System.out.println(simEnvironment.getFileAddress());
-//		GraphicUI.initialize(simEnvironment.getClass(), Experimenter.class, GraphicUI.class, 600, 600, Color.white, Color.blue, false, spaces.SPARSE);
-////		System.out.println(simEnvironment.getFileAddress());
-//
-//
-//	}
+	public static void main(String[] args) throws InterruptedException {
+		/*
+		Set all arguments from java inputs
+		 */
+		int year = 1816;
+		String inputDataDirectory = "/Users/chih-hsinhsueh/Documents/KaiYin/dataByYear/";
+		String fileAddress = "/Users/chih-hsinhsueh/Desktop/test1/";
+		boolean autoMode = true;
+		try {
+			year = Integer.valueOf(args[0]);
+			inputDataDirectory = args[1];
+			fileAddress = args[2];
+		}catch (ArrayIndexOutOfBoundsException e){
+			System.out.println("ArrayIndexOutOfBoundsException caught");
+		}
+		SimEnvironment simEnvironment = new SimEnvironment(200, Experimenter.class,
+				fileAddress, inputDataDirectory, year);
+		System.out.println("RUNNING YEAR " + year);
 
-	public static void main(String[] args) {
-		GraphicUI.initialize(SimEnvironment.class, Experimenter.class, GraphicUI.class, 600, 600, Color.white, Color.blue, false, spaces.SPARSE);
+		GraphicUI.initialize(simEnvironment, Experimenter.class, GraphicUI.class, 600, 600,
+				Color.white, Color.blue, false, spaces.SPARSE, autoMode);
+
 	}
+
+
 
 }

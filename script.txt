@@ -20,26 +20,19 @@ The table is generated from the first three parameters encountered with more tha
 After 3 parameters are encountered with more than one value, subsequent parameters with more than
 one value are ignored.*/
 
-public int year = 1861, 1862, 1863, 1864, 1865, 1866, 1867, 1868, 1869, 1870;
-
+public String dataName = "/Users/kaiyinlin/Desktop/dataByYear/1821.csv", "/Users/kaiyinlin/Desktop/dataByYear/1822.csv";
 
 public int nState = 100;
 public double probOfDemocracy = 0.7;
 public double probOfEnemy = 0.3;
-public String fileAddress = "/Users/kaiyinlin/Desktop/";
-public String inputDataDirectory = "/Users/kaiyinlin/Desktop/dataByYear/";
-public boolean inputData = true;
-public boolean copyBack = true;
-public boolean deleteFile = true;
-public boolean appendInfo = true;
+public String fileAddress = "/Users/kaiyinlin/Desktop/Test/";
 
-public int appendYear = 0;
 public String nameSpace = "SPARSE";
 public int gridWidth = 50;
 public int gridHeight = 50;
 public boolean paramSweeps = true;
 public long simLength = 1001;
-public int simNumber = 1;
+public int simNumber = 10;
 public String fileDataName = "results.txt";
 public String folderDataName = "data";
 public int dataSamplingInterval = 365;

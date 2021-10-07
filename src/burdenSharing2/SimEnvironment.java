@@ -19,7 +19,7 @@ public class SimEnvironment extends SimStateSweep {
     public int nState = 100;
     public double probOfDemocracy = 0.7; // the probability of being democratic
     public double probOfEnemy = 0.3; // the probability of enemy type; two types of enemyType
-    public String fileAddress = "/Users/kaiyinlin/Desktop/";
+    public String fileAddress = "/Users/kaiyinlin/Desktop/merger/";
     public String inputDataDirectory = "/Users/kaiyinlin/Desktop/dataByYear/";
     public boolean inputData = true;
     public boolean copyBack = true;
@@ -46,11 +46,14 @@ public class SimEnvironment extends SimStateSweep {
         // TODO Auto-generated constructor stub
     }
 
-    public SimEnvironment(long seed, Class observer, String fileAddress, String inputDataDirectory){
+    public SimEnvironment(long seed, Class observer,
+                          String fileAddress,
+                          String inputDataDirectory,
+                          int year){
         super(200, observer);
         setFileAddress(fileAddress);
         setInputDataDirectory(inputDataDirectory);
-
+        setYear(year);
     }
 
     /*
@@ -90,7 +93,6 @@ public class SimEnvironment extends SimStateSweep {
         dataName =  inputDataDirectory + Integer.toString(year) + ".csv";
         dataInput = new Input(dataName);
         this.dataInformation = dataInput.getDataInformation();
-        System.out.println("inputDataName = " + dataName);
 
         // set up output information
         appendYear = year + 1;
