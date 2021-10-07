@@ -7,7 +7,12 @@
 
 **To change the simulation to manually run**, the controller is located at the graphicGUI. The variable is "autoMode".
 
+This is BurdenSharing2_2021-10-05, which update all matrix after each agent's move. Copy from 2021-10-01.
+New updates: 
+* (1) include original enemies and allies of enemies only. 
+* (2) if currentU>=0.2 or <=0.2, stop making friends
 
 
-**Need to use MASON Plus 8 +**
+
+**Need to use MASON Plus 8 + **
 

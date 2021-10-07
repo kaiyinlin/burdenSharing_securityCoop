@@ -32,9 +32,9 @@ public class GraphicUI extends GUIStateSweep {
 		Set all arguments from java inputs
 		 */
 		int year = 1816;
-		String inputDataDirectory = "/Users/chih-hsinhsueh/Documents/KaiYin/dataByYear/";
-		String fileAddress = "/Users/chih-hsinhsueh/Desktop/test1/";
-		boolean autoMode = true;
+		String inputDataDirectory = "/Users/kaiyinlin/Desktop/dataByYear/";
+		String fileAddress = "/Users/kaiyinlin/Desktop/";
+		boolean autoMode = false;
 		try {
 			year = Integer.valueOf(args[0]);
 			inputDataDirectory = args[1];

@@ -74,7 +74,7 @@ public class Experimenter extends Observer {
         super.step(state);
 //		printDataInConsole();
 //		nextInterval((SimEnvironment)state);
-        try {
+        try {            
             System.out.println("WRITING!!!!!!!!!!!!!!");
             allianceMatrix(this.fileDirectory, (SimEnvironment) state);
 //            neighborMatrix(this.fileDirectory, (SimEnvironment) state);
@@ -96,6 +96,7 @@ public class Experimenter extends Observer {
                         deleteFileInFileAddress((SimEnvironment) state);
                     }
 //                    state.schedule.clear();
+                    ((SimEnvironment) state).setStateExist(false);
                     state.kill();
                     state.finish();
                 }
@@ -107,6 +108,7 @@ public class Experimenter extends Observer {
             }
 
             // kill the simulation if reaches maxround
+//            System.out.println("Step: "+ state.schedule.getTime());
             if (state.schedule.getTime() == MAX_ROUND) {
                 if (((SimEnvironment) state).appendInfo) {
                     appendInputInfo(this.fileDirectory, (SimEnvironment) state);
@@ -116,11 +118,11 @@ public class Experimenter extends Observer {
                 if (((SimEnvironment) state).deleteFile){
                     deleteFileInFileAddress((SimEnvironment) state);
                 }
+                ((SimEnvironment) state).setStateExist(false);
                 state.kill();
                 state.finish();
             }
-
-            // schedule for next time
+         // schedule for next time
             System.out.println("Schedule Agents");
             List<Integer> scheduleList = Utils.getScheduleOrder((SimEnvironment) state);
 //            state.schedule.clear();
