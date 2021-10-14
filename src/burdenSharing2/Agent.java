@@ -420,7 +420,9 @@ public class Agent implements Steppable {
 //				System.out.println("Situation 2 (Rejection): reject the offer becuase u_ji is less than zero");
                 return false;
             } else { //u_ji is greater than 0, check if this allyJ need more friends
-                if (currentUtility(state, allyJ) < 0) {  //need more friends, one-way threshold
+            	int noAllies = Utils.getCurrentStateAlliance(state, allyJ.id).size();
+            	double usage = Utils.utility(state, allyJ, this) + 0.2 * (Math.pow(noAllies, 1.2) - Math.pow(noAllies+1, 1.2));
+                if (currentUtility(state, allyJ) < 0 && usage > 0) {  //need more friends, and makes sure the new ally is worth
                     //situation 3: accept the offer --> u_ji is greater than 0, and allyJ needs more allies
                     this.currentStepAlliance.add(allyJ.id);
                     allyJ.currentStepAlliance.add(this.id);
