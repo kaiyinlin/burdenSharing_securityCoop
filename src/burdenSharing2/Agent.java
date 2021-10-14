@@ -21,9 +21,7 @@ import sim.util.Bag;
 import sweep.GUIStateSweep;
 
 /**
- * This is BurdenSharing2_2021-09-03, which update all matrix after each agent's move. Copy from 2021-08-21.
- * New: (1) adjust the cost term of enemies only (2) use the original A_ij and A_kj parameters
- * 
+ * This is BurdenSharing2_2021-10-12, github version is 1.7
  * @author kaiyinlin
  */
 public class Agent implements Steppable {
@@ -368,22 +366,22 @@ public class Agent implements Steppable {
      */
     public void provideOffer(SimEnvironment state, Agent allyJ) {
         boolean needMorePartners;
-        if (currentUtility(state, this) >= 0)
-//        if (currentUtility(state, this) >= 0.2 || currentUtility(state, this) <= -0.2)
+        double before = currentUtility(state, this);
+        if (before > 0.2) //no need allies
             needMorePartners = false;//if needMorePartners == false, then stop making friends
         else needMorePartners = true;
         int whileLoopNum = 0;
         int initialPotentialAlliesSize = this.potentialAllies.size();
-        if (needMorePartners == false)
-//			System.out.println("No Need Partners!");
-            if (whileLoopNum == initialPotentialAlliesSize - 1) {
+//        if (needMorePartners == false)
+//		System.out.println("No Need Partners! + currentU = " + currentUtility(state, this));
+//            if (whileLoopNum == initialPotentialAlliesSize - 1) {
 //			System.out.println("whileLoopNum = " + whileLoopNum);
 //			System.out.println("LAST LOOP! WHILE LOOP MAXIMUM IS REACHING !!!!!!!!!!!!!!!!!!!!!!!!!");
-            }
+//            }
         while (needMorePartners && whileLoopNum < initialPotentialAlliesSize) { //making some friends
 //			System.out.println("whileLoopNum = " + whileLoopNum);
 //			System.out.println("maxLoopSize (potential ally size)= " + initialPotentialAlliesSize);
-//			System.out.println("need more partners!");
+//			System.out.println("need more partners! currentU = " + currentUtility(state, this));
             Set<Integer> newPotentialAllies = potentialAllies;
             allyJ = highestRanked((SimEnvironment) state, newPotentialAllies); //highest rank
             //accepting offer
@@ -393,12 +391,12 @@ public class Agent implements Steppable {
                 acceptOffer((SimEnvironment) state, allyJ);
                 potentialAllies.remove(allyJ.id); //remove the highest ranked ally from potentialAllies list
             }
-            if (currentUtility(state, this) >= 0) needMorePartners = false;
-//            if (currentUtility(state, this) >= 0.2 || currentUtility(state, this) <= -0.2) needMorePartners = false;
+            if (currentUtility(state, this) > 0.2) needMorePartners = false;
+            else if(currentUtility(state, this) < 0 && Math.abs(currentUtility(state, this)) > Math.abs(before)) needMorePartners = false;
             else needMorePartners = true;
             whileLoopNum++;
 
-        }
+        } //end of while loop
     }
 
     /*
@@ -418,17 +416,14 @@ public class Agent implements Steppable {
             return false;
         } else { //allyJ is a qualified potential allies. 2. check the u_ji
             if (Utils.utility((SimEnvironment) state, allyJ, this) <= 0) {
-                //reject the offer, situation 2
+                //reject the offer, situation 2 (this is not worth to make friend
 //				System.out.println("Situation 2 (Rejection): reject the offer becuase u_ji is less than zero");
                 return false;
             } else { //u_ji is greater than 0, check if this allyJ need more friends
-                if (currentUtility(state, allyJ) < 0) {  //need more friends
-//            	if (currentUtility(state, allyJ) <= 0.2 && currentUtility(state, allyJ) >= -0.2) {
+                if (currentUtility(state, allyJ) < 0) {  //need more friends, one-way threshold
                     //situation 3: accept the offer --> u_ji is greater than 0, and allyJ needs more allies
                     this.currentStepAlliance.add(allyJ.id);
                     allyJ.currentStepAlliance.add(this.id);
-                    this.cost = Math.pow(currentStepAlliance.size(), 2);
-                    allyJ.cost = Math.pow(allyJ.currentStepAlliance.size(), 2);
 //					System.out.println("Situation 3 (Acceptence): Recipient accept the offer based on need.");
 //					System.out.println("allyJ's allEnemies = " + Utils.getAllEnemies(state, allyJ.id).toString());
                     return true;
@@ -442,8 +437,6 @@ public class Agent implements Steppable {
 //							System.out.println("remove lowest ranked allies = " + currentLowestRanked.id);
                             this.currentStepAlliance.add(allyJ.id);
                             allyJ.currentStepAlliance.add(this.id);
-                            this.cost = Math.pow(currentStepAlliance.size(), 2);
-                            allyJ.cost = Math.pow(allyJ.currentStepAlliance.size(), 2);
 //							System.out.println("Situation 4 (Acceptence): Recipient replaces current lowest ally and accept the offer");
 //							System.out.println("allyJ's allEnemies = " + Utils.getAllEnemies(state, allyJ.id).toString());
                             return true;
