@@ -13,12 +13,12 @@ This is BurdenSharing2_2021-10-12, which update all matrix after each agent's mo
 New updates: 
 * (1) include original enemies and allies of enemies only. 
 * (2) When providing offers: if currentU > 0.2 stop making friends; if currentU < 0 && abs(currentU) > abs(beforeU), stop making friends
-* (4) When accepting an offer: if the current utility of allyJ is < 0, accept the offer
+* (3) When accepting an offer: if the current utility of allyJ is < 0, accept the offer (data_13)
 
-
+Updates:
+* 2021-10-14: When accepting the offer: if the current utility of allyJ is < 0 and usage of potential ally > 0, accept the offer (data_14)
 
 **Need to use MASON Plus 8 + **
-
 
 
 
