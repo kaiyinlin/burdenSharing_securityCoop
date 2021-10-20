@@ -174,7 +174,7 @@ public class Utils {
      * Common neighbors
      */
     public static int enemyNeighbor(SimEnvironment state, Agent i, Agent j) {
-        j.neighbors = j.findNeighbors(state);
+//        j.neighbors = j.findNeighbors(state);
 
         Set<Integer> enemyI = getAllEnemies(state, i.id);
         Set<Integer> intersection = enemyI.stream().distinct().filter(j.neighbors::contains)
@@ -239,9 +239,9 @@ public class Utils {
 //		System.out.println("commonNeighbor = " + NN);
         // Democracy value: D is assigned a value of 1 if j is a democracy and zero
         // otherwise
-        if (j.democracy == true)
+        if (j.democracy == 1)
             Dj = 1;
-        else if (j.democracy == false)
+        else if (j.democracy == 0)
             Dj = 0;
         // common culture: S is assigned a value of 1 if i and j are culturally similar
         // and zero otherwise
@@ -255,7 +255,7 @@ public class Utils {
 //			System.out.println("Attraction: this agent and #" + j.id + "has common alliance (T_ijm)");
         }
 //		System.out.println("A_ij's EE = " + EE + "   Dj = " + Dj + "   S= " + S + "   NE = " + NE + "   T =" + T);
-        if (i.democracy == true) { // if demo_i = 1
+        if (i.democracy == 1) { // if demo_i = 1
             A_ij = 0.2 * EE + 0.3 * Dj + 0.1 * S + 0.2 * NE + 0.2 * T;
         } else { // if demo_j = 0
             A_ij = 0.3 * EE + 0.1 * Dj + 0.1 * S + 0.3 * NE + 0.2 * T;
@@ -282,10 +282,7 @@ public class Utils {
             int T = commonAlliance(state, k, j); // common alliance between j and k
             // Democracy value: D is assigned a value of 1 if j is a democracy and zero
             // otherwise
-            if (j.democracy == true)
-                Dj = 1;
-            else if (j.democracy == false)
-                Dj = 0;
+            Dj = j.democracy == 1 ? 1 : 0;
             // common culture: S is assigned a value of 1 if i and j are culturally similar
             // and zero otherwise
             if (state.dataName.length() == 0) {
@@ -299,7 +296,7 @@ public class Utils {
 //						" the would-be partner, " + j.id + ", has common alliance (T_jkm) with " + i.id + "'s SRG" + e);
 //			}
 //			System.out.println("A_jk's EE = " + EE + "   Dj = " + Dj + "   S= " + S + "   NE = " + NE + "   T =" + T);
-            if (i.democracy = true) { // if demo_i = 1
+            if (i.democracy == 1) { // if demo_i = 1
                 A_kj += 0.2 * EE + 0.3 * Dj + 0.1 * S + 0.2 * NE + 0.2 * T;
             } else { // if demo_i = 0
                 A_kj += 0.3 * EE + 0.1 * Dj + 0.1 * S + 0.3 * NE + 0.2 * T;

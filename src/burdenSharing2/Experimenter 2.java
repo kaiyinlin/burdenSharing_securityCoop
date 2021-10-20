@@ -155,8 +155,8 @@ public class Experimenter extends Observer {
                 data.add(a.capability);//i's capability
                 data.add(b.capability);//j's capability
                 data.add(state.dataInformation.get(a.id).getCulture().get(b.id));//culture similarity
-                data.add(a.democracy);//i's democracy
-                data.add(b.democracy);//j's democracy
+                data.add(a.democracy == true ? 1 : 0);//i's democracy
+                data.add(b.democracy == true ? 1 : 0);//j's democracy
                 data.add(a.neighborList(state)[j]);//i's neighbors
                 Set<Integer> allEnemies = Utils.getAllEnemies((SimEnvironment) state, a.id);
                 int[] overallEnemyList = Utils.convertSetToEnemyList((SimEnvironment) state, allEnemies, agents.numObjs, a.SRG);
@@ -207,19 +207,19 @@ public class Experimenter extends Observer {
                 writer.append(",");
                 writer.append(Integer.toString(state.dataInformation.get(a.id).getCulture().get(b.id)));//culture similarity
                 writer.append(",");
-                writer.append(Integer.toString(a.democracy));//i's democracy
+                writer.append(Integer.toString(a.democracy == true ? 1 : 0));//i's democracy
                 writer.append(",");
-                writer.append(Integer.toString(b.democracy));//j's democracy
+                writer.append(Integer.toString(b.democracy == true ? 1 : 0));//j's democracy
                 writer.append(",");
-                writer.append(Integer.toString(a.neighborList(state)[bIndex]));//i's neighbors; notice: b-->a from input
+                writer.append(Integer.toString(a.neighborList(state)[bIndex]));//i's neighbors
                 writer.append(",");
-                Set<Integer> allEnemies = Utils.getAllEnemies((SimEnvironment) state, b.id);
+                Set<Integer> allEnemies = Utils.getAllEnemies((SimEnvironment) state, a.id);
                 int[] overallEnemyList = Utils.convertSetToEnemyList((SimEnvironment) state, allEnemies, state.agentIdList.size(), a.SRG);
                 writer.append(Integer.toString(overallEnemyList[bIndex]));//i's enemies
                 writer.append(",");
                 writer.append(Integer.toString(a.allianceList[bIndex]));//i's allies
                 writer.append(",");
-                writer.append(Double.toString(a.utilityOfAll[bIndex]));//u_ij
+                writer.append(Double.toString(a.utilityOfAll[bIndex]));
                 writer.append(",");
                 writer.append(Double.toString(a.currentUtility(state, a))); //i's currentU
                 writer.append('\n');

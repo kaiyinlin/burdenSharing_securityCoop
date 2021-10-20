@@ -64,7 +64,10 @@ public class Input {
             if (enemy == 1 && !i.equals(j)) {
                 agentInfo.updateEnemy(i);
             }
-            if (neighb == 1 && !i.equals(j)) {
+//            if (neighb == 1 && !i.equals(j)) {
+//                agentInfo.updateNeighbor(i);
+//            }
+            if (neighb == 1) {
                 agentInfo.updateNeighbor(i);
             }
             if (alliance == 1 && !i.equals(j)) {
