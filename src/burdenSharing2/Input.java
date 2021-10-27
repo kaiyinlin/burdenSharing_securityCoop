@@ -44,11 +44,11 @@ public class Input {
         // parse file information
         for (String[] lst : data) {
             Integer alliance;
-            Integer i = Integer.valueOf(lst[1]);
-            Integer j = Integer.valueOf(lst[2]); //key
-            double capJ = Double.valueOf(lst[4]);
+            Integer i = Integer.valueOf(lst[1]); //key
+            Integer j = Integer.valueOf(lst[2]); 
+            double capI = Double.valueOf(lst[3]);
             Integer cultureIndex = Integer.valueOf(lst[5]);
-            Integer democJ = Integer.valueOf(lst[7]);
+            Integer democI = Integer.valueOf(lst[6]);
             Integer neighb = Integer.valueOf(lst[8]);
             Integer enemy = Integer.valueOf(lst[9]);
             if (lst.length == 11) {
@@ -57,23 +57,23 @@ public class Input {
                 alliance = 0;
             }
 
-
-            InfoIdentifier agentInfo = info.getOrDefault(j, new InfoIdentifier(j, capJ, democJ, new HashSet<Integer>(),
+            InfoIdentifier agentInfo = info.getOrDefault(i, new InfoIdentifier(i, capI, democI, new HashSet<Integer>(),
                     new HashSet<Integer>(), new HashMap<Integer, Integer>(), new HashSet<Integer>()));
             agentInfo.updateCulture(i, cultureIndex);
+            
             if (enemy == 1 && !i.equals(j)) {
-                agentInfo.updateEnemy(i);
+                agentInfo.updateEnemy(j);
             }
 //            if (neighb == 1 && !i.equals(j)) {
 //                agentInfo.updateNeighbor(i);
 //            }
             if (neighb == 1) {
-                agentInfo.updateNeighbor(i);
+                agentInfo.updateNeighbor(j);
             }
             if (alliance == 1 && !i.equals(j)) {
-                agentInfo.updateAlliance(i);
+                agentInfo.updateAlliance(j);
             }
-            info.put(j, agentInfo);
+            info.put(i, agentInfo);
 
         }
         return this.info;

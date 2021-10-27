@@ -34,7 +34,7 @@ public class GraphicUI extends GUIStateSweep {
 		int year = 1816;
 		String inputDataDirectory = "/Users/kaiyinlin/Desktop/dataByYear/";
 		String fileAddress = "/Users/kaiyinlin/Desktop/";
-		boolean autoMode = false;
+		boolean autoMode = true;
 		try {
 			year = Integer.valueOf(args[0]);
 			inputDataDirectory = args[1];
