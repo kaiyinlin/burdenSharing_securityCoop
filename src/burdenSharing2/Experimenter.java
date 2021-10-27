@@ -211,15 +211,15 @@ public class Experimenter extends Observer {
                 writer.append(",");
                 writer.append(Integer.toString(b.democracy));//j's democracy
                 writer.append(",");
-                writer.append(Integer.toString(a.neighborList(state)[bIndex]));//i's neighbors; notice: b-->a from input
+                writer.append(Integer.toString(a.neighborList(state)[bIndex]));//i's neighbors
                 writer.append(",");
-                Set<Integer> allEnemies = Utils.getAllEnemies((SimEnvironment) state, b.id);
+                Set<Integer> allEnemies = Utils.getAllEnemies((SimEnvironment) state, a.id);
                 int[] overallEnemyList = Utils.convertSetToEnemyList((SimEnvironment) state, allEnemies, state.agentIdList.size(), a.SRG);
                 writer.append(Integer.toString(overallEnemyList[bIndex]));//i's enemies
                 writer.append(",");
                 writer.append(Integer.toString(a.allianceList[bIndex]));//i's allies
                 writer.append(",");
-                writer.append(Double.toString(a.utilityOfAll[bIndex]));//u_ij
+                writer.append(Double.toString(a.utilityOfAll[bIndex]));
                 writer.append(",");
                 writer.append(Double.toString(a.currentUtility(state, a))); //i's currentU
                 writer.append('\n');

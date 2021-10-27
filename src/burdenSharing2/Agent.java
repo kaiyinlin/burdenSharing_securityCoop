@@ -21,9 +21,8 @@ import sim.util.Bag;
 import sweep.GUIStateSweep;
 
 /**
- * This is BurdenSharing2_2021-10-05, which update all matrix after each agent's move. Copy from 2021-10-01.
- * New: (1) include original enemies and allies of enemies only. 
- * (2) if currentU>=0.2 or <=0.2, stop making friends
+ * This is BurdenSharing2_2021-09-03, which update all matrix after each agent's move. Copy from 2021-08-21.
+ * New: (1) adjust the cost term of enemies only (2) use the original A_ij and A_kj parameters
  * 
  * @author kaiyinlin
  */
@@ -72,7 +71,10 @@ public class Agent implements Steppable {
         //attribute vector
         attribute[0] = capability;
         attribute[1] = (double) culture;
-        attribute[2] = democracy;
+        if (this.democracy == 1)
+            attribute[2] = 1;
+        else
+            attribute[2] = 0;
         //relations
         SRG = new HashSet<Integer>();
         neighbors = new HashSet<Integer>();
@@ -102,21 +104,25 @@ public class Agent implements Steppable {
         //attribute vector
         attribute[0] = capability;
         attribute[1] = (double) culture;
-        attribute[2] = democracy;
+        if (this.democracy == 1)
+            attribute[2] = 1;
+        else
+            attribute[2] = 0;
         //relations
         this.SRG = SRG;
         this.alliance = alliance;
         this.neighbors = neighbors;
         currentStepAlliance = new HashSet<Integer>();
         potentialAllies = new HashSet<Integer>();
-
+//        System.out.println(this.alliance.toString());
+//		similarCulture = new HashSet<Integer>();
 
         //set the color for agent based on the enemyTypeA
         float colorCapability = (float) this.capability;
-        if (this.democracy == 1)
-            setColor(state, (float) 0, (float) 0, (float) 1, 1);//typeA, blue color
+        if (democracy == 1)
+            setColor(state, (float) 0, (float) 0, (float) 1, (float) colorCapability);//typeA, blue color
         else
-            setColor(state, (float) 1, (float) 0, (float) 0, 1); //typeB, red color
+            setColor(state, (float) 1, (float) 0, (float) 0, (float) colorCapability); //typeB, red color
 
     }
 
@@ -128,20 +134,18 @@ public class Agent implements Steppable {
      */
     @Override
     public void step(SimState state) {
-//        System.out.println("CurrentStep: "+ state.schedule.getTime());
-        if(this.id == 260 || this.id== 345) {
-        	System.out.println("agent_id: "+ this.id);
-            System.out.println("neighbors: " + this.neighbors.toString());
-        }
+        System.out.println("CurrentStep: "+ state.schedule.getTime());
         currentStep = state.schedule.getSteps();
         SimEnvironment Environment = (SimEnvironment) state;
-//        if (currentStep == 0 && Environment.dataName.length() == 0) {
-//            //define neighbors
-//            findNeighbors((SimEnvironment) state); //define neighbors
-//        }
+        System.out.println("this.id = " + this.id + "    currentStep = " + state.schedule.getTime() + "   ordering utility = " + this.orderingUtility);
+//		System.out.println("last step alliance.size = " + this.alliance.size());
+        if (currentStep == 0 && Environment.dataName.length() == 0) {
+            //define neighbors
+            findNeighbors((SimEnvironment) state); //define neighbors
+        }
         //calculate the utility for each other agent
         allUtility(Environment, this);
-
+//		System.out.println("utilityOfAll = " + Arrays.toString(utilityOfAll));
         //*********************END OF CALCULATE THE UTILITY OF ALL******************************
         allianceList = new int[Environment.nState];
         potentialAllies = Utils.getPotentialAllies((SimEnvironment) state, this.id);
@@ -249,35 +253,38 @@ public class Agent implements Steppable {
     /*
      * Define neighbors
      */
-//    public Set<Integer> findNeighbors(SimEnvironment state) {
-//        for (Agent p : state.allAgents.values()) {
-//            if (!(this.equals(p))) { //avoid counting itself as a neighbor
-//                if (p.x == this.x) {
-//                    if (this.y == 0) { //deal with torus problem
-//                        if (p.y == Math.sqrt(state.nState) - 1 || p.y == 1) this.neighbors.add(p.id);
-//                    } else if (this.y == Math.sqrt(state.nState) - 1) { //deal with torus problem
-//                        if (p.y == 0 || p.y == Math.sqrt(state.nState) - 2) this.neighbors.add(p.id);
-//                    } else { //in the middle
-//                        if (p.y == this.y - 1 || p.y == this.y + 1) { //add two neighbors
-//                            this.neighbors.add(p.id);
-//                        }
-//                    }
-//                }//end p.x==this.x
-//                if (p.y == this.y) {
-//                    if (this.x == 0) {//deal with torus problem
-//                        if (p.x == Math.sqrt(state.nState) - 1 || p.x == 1) this.neighbors.add(p.id);
-//                    } else if (this.x == Math.sqrt(state.nState) - 1) {//deal with torus problem
-//                        if (p.x == 0 || p.x == Math.sqrt(state.nState) - 2) this.neighbors.add(p.id);
-//                    } else {//in the middle
-//                        if (p.x == this.x - 1 || p.x == this.x + 1) { //add two neighbors
-//                            this.neighbors.add(p.id);
-//                        }
-//                    }
-//                } //end p.y=this.y
-//            }
-//        }//end of for
-//        return neighbors;
-//    }
+    public Set<Integer> findNeighbors(SimEnvironment state) {
+//		Bag allAgents = state.sparseSpace.getAllObjects();
+        for (Agent p : state.allAgents.values()) {
+//			Agent p = (Agent) allAgents.objs[i]; //look for a potential neighbor p
+            if (!(this.equals(p))) { //avoid counting itself as a neighbor
+                if (p.x == this.x) {
+                    if (this.y == 0) { //deal with torus problem
+                        if (p.y == Math.sqrt(state.nState) - 1 || p.y == 1) this.neighbors.add(p.id);
+                    } else if (this.y == Math.sqrt(state.nState) - 1) { //deal with torus problem
+                        if (p.y == 0 || p.y == Math.sqrt(state.nState) - 2) this.neighbors.add(p.id);
+                    } else { //in the middle
+                        if (p.y == this.y - 1 || p.y == this.y + 1) { //add two neighbors
+                            this.neighbors.add(p.id);
+                        }
+                    }
+                }//end p.x==this.x
+                if (p.y == this.y) {
+                    if (this.x == 0) {//deal with torus problem
+                        if (p.x == Math.sqrt(state.nState) - 1 || p.x == 1) this.neighbors.add(p.id);
+                    } else if (this.x == Math.sqrt(state.nState) - 1) {//deal with torus problem
+                        if (p.x == 0 || p.x == Math.sqrt(state.nState) - 2) this.neighbors.add(p.id);
+                    } else {//in the middle
+                        if (p.x == this.x - 1 || p.x == this.x + 1) { //add two neighbors
+                            this.neighbors.add(p.id);
+                        }
+                    }
+                } //end p.y=this.y
+            }
+        }//end of for
+//		System.out.println("this id = " + this.id + "how many neighbors = " + neighbors.size());
+        return neighbors;
+    }
 
     /*
      * NeighborList for experimenter to output neighbor matrix
@@ -361,13 +368,14 @@ public class Agent implements Steppable {
      */
     public void provideOffer(SimEnvironment state, Agent allyJ) {
         boolean needMorePartners;
-        if (currentUtility(state, this) >= 0.2 || currentUtility(state, this) <= -0.2)
+        if (currentUtility(state, this) >= 0)
+//        if (currentUtility(state, this) >= 0.2 || currentUtility(state, this) <= -0.2)
             needMorePartners = false;//if needMorePartners == false, then stop making friends
         else needMorePartners = true;
         int whileLoopNum = 0;
         int initialPotentialAlliesSize = this.potentialAllies.size();
         if (needMorePartners == false)
-//			System.out.println("No Need Partners! + currentU = " + currentUtility(state, this));
+//			System.out.println("No Need Partners!");
             if (whileLoopNum == initialPotentialAlliesSize - 1) {
 //			System.out.println("whileLoopNum = " + whileLoopNum);
 //			System.out.println("LAST LOOP! WHILE LOOP MAXIMUM IS REACHING !!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -375,7 +383,7 @@ public class Agent implements Steppable {
         while (needMorePartners && whileLoopNum < initialPotentialAlliesSize) { //making some friends
 //			System.out.println("whileLoopNum = " + whileLoopNum);
 //			System.out.println("maxLoopSize (potential ally size)= " + initialPotentialAlliesSize);
-//			System.out.println("need more partners! currentU = " + currentUtility(state, this));
+//			System.out.println("need more partners!");
             Set<Integer> newPotentialAllies = potentialAllies;
             allyJ = highestRanked((SimEnvironment) state, newPotentialAllies); //highest rank
             //accepting offer
@@ -385,7 +393,8 @@ public class Agent implements Steppable {
                 acceptOffer((SimEnvironment) state, allyJ);
                 potentialAllies.remove(allyJ.id); //remove the highest ranked ally from potentialAllies list
             }
-            if (currentUtility(state, this) >= 0.2 || currentUtility(state, this) <= -0.2) needMorePartners = false;
+            if (currentUtility(state, this) >= 0) needMorePartners = false;
+//            if (currentUtility(state, this) >= 0.2 || currentUtility(state, this) <= -0.2) needMorePartners = false;
             else needMorePartners = true;
             whileLoopNum++;
 
@@ -409,14 +418,17 @@ public class Agent implements Steppable {
             return false;
         } else { //allyJ is a qualified potential allies. 2. check the u_ji
             if (Utils.utility((SimEnvironment) state, allyJ, this) <= 0) {
-                //reject the offer, situation 2 (this is not worth to make friend
+                //reject the offer, situation 2
 //				System.out.println("Situation 2 (Rejection): reject the offer becuase u_ji is less than zero");
                 return false;
             } else { //u_ji is greater than 0, check if this allyJ need more friends
-                if (currentUtility(state, allyJ) <= 0.2 && currentUtility(state, allyJ) >= - 0.2) {  //need more friends
+                if (currentUtility(state, allyJ) < 0) {  //need more friends
+//            	if (currentUtility(state, allyJ) <= 0.2 && currentUtility(state, allyJ) >= -0.2) {
                     //situation 3: accept the offer --> u_ji is greater than 0, and allyJ needs more allies
                     this.currentStepAlliance.add(allyJ.id);
                     allyJ.currentStepAlliance.add(this.id);
+                    this.cost = Math.pow(currentStepAlliance.size(), 2);
+                    allyJ.cost = Math.pow(allyJ.currentStepAlliance.size(), 2);
 //					System.out.println("Situation 3 (Acceptence): Recipient accept the offer based on need.");
 //					System.out.println("allyJ's allEnemies = " + Utils.getAllEnemies(state, allyJ.id).toString());
                     return true;
@@ -430,6 +442,8 @@ public class Agent implements Steppable {
 //							System.out.println("remove lowest ranked allies = " + currentLowestRanked.id);
                             this.currentStepAlliance.add(allyJ.id);
                             allyJ.currentStepAlliance.add(this.id);
+                            this.cost = Math.pow(currentStepAlliance.size(), 2);
+                            allyJ.cost = Math.pow(allyJ.currentStepAlliance.size(), 2);
 //							System.out.println("Situation 4 (Acceptence): Recipient replaces current lowest ally and accept the offer");
 //							System.out.println("allyJ's allEnemies = " + Utils.getAllEnemies(state, allyJ.id).toString());
                             return true;
