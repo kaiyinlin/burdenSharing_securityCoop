@@ -296,11 +296,13 @@ public class Utils {
      */
     public static double trust(SimEnvironment state, Agent i, Agent j) {
         double R_j = 0;
-        if (j.currentStepAlliance.size() == 0 || j.currentStepAlliance == null) // if j doesn't have any allies, then
+        Set<Integer> currentStateAlliance_I = getCurrentStateAlliance(state, i.id);
+        Set<Integer> currentStateAlliance_J = getCurrentStateAlliance(state, j.id);
+        if (currentStateAlliance_I.size() == 0 || currentStateAlliance_J == null) // if j doesn't have any allies, then
             // there is no trust term
             return 0;
         else {
-            for (int l : j.currentStepAlliance) { // if j has some allies, use u_il*1 to evaluate the trust term
+            for (int l : currentStateAlliance_J) { // if j has some allies, use u_il*1 to evaluate the trust term
                 double u_il = i.utilityOfAll[state.agentIdList.indexOf(l)];
                 R_j += u_il;
             }

@@ -68,7 +68,7 @@ public class Experimenter extends Observer {
     @Override
     public void step(SimState state) {
         super.step(state);
-//		printDataInConsole();
+//		printDataInConsole((SimEnvironment)state);
 //		nextInterval((SimEnvironment)state);
         try {            
             System.out.println("WRITING!!!!!!!!!!!!!!");
@@ -500,12 +500,14 @@ public class Experimenter extends Observer {
      * @param b
      * @return
      */
-    public ArrayList<Integer> commonAlliance(Agent a, Agent b) {
-        if (a.currentStepAlliance == null)
+    public ArrayList<Integer> commonAlliance(SimEnvironment state, Agent a, Agent b) {
+    	Set<Integer> allAlliance_a = Utils.getCurrentStateAlliance(state, a.id);
+    	Set<Integer> allAlliance_b = Utils.getCurrentStateAlliance(state, b.id);
+        if (allAlliance_a == null)
             return null;
-        Set<Integer> intersection = a.currentStepAlliance.
+        Set<Integer> intersection = allAlliance_a.
                 stream().distinct().
-                filter(b.currentStepAlliance::contains).collect(Collectors.toSet());
+                filter(allAlliance_b::contains).collect(Collectors.toSet());
         ArrayList<Integer> commonAlliance = new ArrayList<Integer>();
         if (intersection.size() == 0 || intersection == null)
             return null;
@@ -517,7 +519,7 @@ public class Experimenter extends Observer {
         }
     }
 
-    public void printDataInConsole() {
+    public void printDataInConsole(SimEnvironment state) {
         System.out.println("Step   a.id   b.id   commonAlliance");
         for (int i = 0; i < agents.numObjs; i++) {
             Agent a = (Agent) agents.objs[i];
@@ -526,7 +528,7 @@ public class Experimenter extends Observer {
                 if (a == b) {
                     System.out.println(state.schedule.getSteps() + "   " + a.id + "   " + b.id + "    null");
                 } else {
-                    System.out.println(state.schedule.getSteps() + "   " + a.id + "   " + b.id + "   " + commonAlliance(a, b));
+                    System.out.println(state.schedule.getSteps() + "   " + a.id + "   " + b.id + "   " + commonAlliance(state, a, b));
                 }
 
             }
