@@ -35,6 +35,8 @@ public class Utils {
     /*
      * All Enemies - Calculate all allies' enemy into enemyList all enemies =
      * individual enemies + friends' enemies + enemies' friend
+     * update: Version 1.06 define SRGs as original enemies + enemies' friends; 
+     * 		friend's enemies are excluded
      */
     private static Set<Integer> getExpandedEnemySet(Map<Integer, Agent> allAgents, Set<Integer> enemiesSet) {
 
@@ -174,8 +176,6 @@ public class Utils {
      * Common neighbors
      */
     public static int enemyNeighbor(SimEnvironment state, Agent i, Agent j) {
-//        j.neighbors = j.findNeighbors(state);
-
         Set<Integer> enemyI = getAllEnemies(state, i.id);
         Set<Integer> intersection = enemyI.stream().distinct().filter(j.neighbors::contains)
                 .collect(Collectors.toSet());
@@ -188,6 +188,8 @@ public class Utils {
 
     /*
      * common alliance
+     * Update 2021-10-27:
+     * v1.06 presents common alliance as integers, not binary
      */
     public static int commonAlliance(SimEnvironment state, Agent i, Agent j) {
         Set<Integer> allianceI = getCurrentStateAlliance(state, i.id);
@@ -216,13 +218,8 @@ public class Utils {
 
     public static double utility(SimEnvironment state, Agent i, Agent j) {
         double u_ij;
-//		if(state.schedule.getTime() < 1) {
-//			u_ij = attractiveness(state, i, j) + prevention(state, i, j);
-//		}
-//		else {
         u_ij = j.capability * (0.4 * attractiveness(state, i, j) + 0.2 * prevention(state, i, j) + 0.4 * trust(state, i, j));
-//		}
-//		System.out.println("i.id = "+ i.id + "   j.id = "+ j.id + "   u_ij =" + u_ij + "   j.trust = " + trust(i,j));
+        
         return u_ij;
     }
 
@@ -236,32 +233,26 @@ public class Utils {
         int NE = enemyNeighbor(state, i, j); // if j is geographically contiguous to at least one of i’s enemies
         int T = commonAlliance(state, i, j); // common alliance
         double A_ij = 0;
-//		System.out.println("commonNeighbor = " + NN);
-        // Democracy value: D is assigned a value of 1 if j is a democracy and zero
-        // otherwise
+        // Democracy value: D is assigned a value of 1 if j is a democracy 
+        //and zero otherwise
         if (j.democracy == 1)
             Dj = 1;
         else if (j.democracy == 0)
             Dj = 0;
-        // common culture: S is assigned a value of 1 if i and j are culturally similar
+        // common culture: S is assigned a value of 1 if i see "i and j are culturally similar"
         // and zero otherwise
+        //Update 10-27-2021: not necessary to be symmetric
         if (state.dataName.length() == 0) {
             S = i.culture == j.culture ? 1 : 0;
         } else {
             S = state.dataInformation.get(i.id).getCulture().get(j.id) == 1 ? 1 : 0;
         }
-
-        if (T == 1) {
-//			System.out.println("Attraction: this agent and #" + j.id + "has common alliance (T_ijm)");
-        }
-//		System.out.println("A_ij's EE = " + EE + "   Dj = " + Dj + "   S= " + S + "   NE = " + NE + "   T =" + T);
         if (i.democracy == 1) { // if demo_i = 1
             A_ij = 0.2 * EE + 0.3 * Dj + 0.1 * S + 0.2 * NE + 0.2 * T;
         } else { // if demo_j = 0
             A_ij = 0.3 * EE + 0.1 * Dj + 0.1 * S + 0.3 * NE + 0.2 * T;
         }
 
-//		System.out.println("A_ij = " + A_ij);
         return A_ij;
     }
 
@@ -270,8 +261,7 @@ public class Utils {
      */
     public static double prevention(SimEnvironment state, Agent i, Agent j) {
         double A_kj = 0;
-//		System.out.println("i SRG size =" + i.SRG.size());
-//		Bag allAgents = state.sparseSpace.getAllObjects();
+
         Set<Integer> enemyI = getAllEnemies(state, i.id);
         for (int e : enemyI) { // k are the enemies of i
             Agent k = state.allAgents.get(e);
@@ -280,10 +270,10 @@ public class Utils {
             int S = 0; // common culture between j and k
             int NE = enemyNeighbor(state, k, j); // if j is geographically contiguous to at least one of k’s enemies
             int T = commonAlliance(state, k, j); // common alliance between j and k
-            // Democracy value: D is assigned a value of 1 if j is a democracy and zero
-            // otherwise
+            // Democracy value: 
+            //D is assigned a value of 1 if j is a democracy and zero otherwise
             Dj = j.democracy == 1 ? 1 : 0;
-            // common culture: S is assigned a value of 1 if i and j are culturally similar
+            // common culture: S is assigned a value of 1 if i see " i and j are culturally similar"
             // and zero otherwise
             if (state.dataName.length() == 0) {
                 S = k.culture == j.culture ? 1 : 0;
@@ -291,19 +281,13 @@ public class Utils {
                 S = state.dataInformation.get(k.id).getCulture().get(j.id) == 1 ? 1 : 0;
             }
 
-//			if (T == 1) {
-//				System.out.println(
-//						" the would-be partner, " + j.id + ", has common alliance (T_jkm) with " + i.id + "'s SRG" + e);
-//			}
-//			System.out.println("A_jk's EE = " + EE + "   Dj = " + Dj + "   S= " + S + "   NE = " + NE + "   T =" + T);
             if (i.democracy == 1) { // if demo_i = 1
                 A_kj += 0.2 * EE + 0.3 * Dj + 0.1 * S + 0.2 * NE + 0.2 * T;
             } else { // if demo_i = 0
                 A_kj += 0.3 * EE + 0.1 * Dj + 0.1 * S + 0.3 * NE + 0.2 * T;
             }
-
         }
-//		System.out.println("A_jk = " + A_jk);
+        
         return A_kj;
     }
 
@@ -312,13 +296,11 @@ public class Utils {
      */
     public static double trust(SimEnvironment state, Agent i, Agent j) {
         double R_j = 0;
-//		System.out.println("j.alliance size = " + j.alliance.size());
         if (j.currentStepAlliance.size() == 0 || j.currentStepAlliance == null) // if j doesn't have any allies, then
             // there is no trust term
             return 0;
         else {
             for (int l : j.currentStepAlliance) { // if j has some allies, use u_il*1 to evaluate the trust term
-//				System.out.println(i.utilityOfAll[l.id]);
                 double u_il = i.utilityOfAll[state.agentIdList.indexOf(l)];
                 R_j += u_il;
             }
@@ -338,7 +320,6 @@ public class Utils {
         int[] newList = new int[totalAgentCount];
         Arrays.fill(newList, 0);
         for (int s : targetSet) {
-//			a.alliance.add(ca.id);
             newList[state.getIndex(s)] = 1;
         }
         return newList;
@@ -370,7 +351,6 @@ public class Utils {
         Map<Integer, Double> sorted =
                 allUtilities.entrySet().stream().sorted(Map.Entry.comparingByValue())
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-//		System.out.println(sorted.toString());
         return new ArrayList<>(sorted.keySet());
     }
 

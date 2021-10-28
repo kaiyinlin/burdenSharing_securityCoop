@@ -18,6 +18,9 @@ New updates:
 * (3) secondary enemies rate: 0.5
 * (4) cost term = $$0.2 \times T^{1.2}$$ (Data_v11); cost term = $$0.2 \times T^2$$ (Data_v12)
 
+Update 2021-10-27
+(1) if currentU > 0.2 or currentU < -0.2, stop making alliance
+(2) change the sequence of data reading: i --> j
 
 
 **Need to use MASON Plus 8 + **

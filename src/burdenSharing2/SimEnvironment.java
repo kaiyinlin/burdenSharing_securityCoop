@@ -16,9 +16,6 @@ public class SimEnvironment extends SimStateSweep {
     /*
      * Burden sharing parameters
      */
-    public int nState = 100;
-//    public double probOfDemocracy = 0.7; // the probability of being democratic
-//    public double probOfEnemy = 0.3; // the probability of enemy type; two types of enemyType
     public String fileAddress = "/Users/kaiyinlin/Desktop/merger/";
     public String inputDataDirectory = "/Users/kaiyinlin/Desktop/dataByYear/";
     public boolean inputData = true;
@@ -63,7 +60,6 @@ public class SimEnvironment extends SimStateSweep {
      */
     public void start() {
         super.start();
-        // should I reset all data here? Take a look of kh-model
         this.make2DSpace(spaces.SPARSE, gridWidth, gridHeight); // make the space
         getDataInformation();
         agentIdList = dataInformation.keySet().stream().collect(Collectors.toList());
@@ -125,7 +121,6 @@ public class SimEnvironment extends SimStateSweep {
         for (int s : scheduleList) {
             Agent a = this.getAgent(s);
             schedule.scheduleOnce(allAgents.get(s), o);
-//            a.event = this.schedule.scheduleRepeating(this.getAgent(s), o, 1.0);
             o++;
         }
 
@@ -151,21 +146,6 @@ public class SimEnvironment extends SimStateSweep {
      * *****************************************************************************
      * ****
      */
-//    public double getProbOfDemocracy() {
-//        return probOfDemocracy;
-//    }
-//
-//    public void setProbOfDemocracy(double probOfDemocracy) {
-//        this.probOfDemocracy = probOfDemocracy;
-//    }
-
-//    public double getProbOfEnemy() {
-//        return probOfEnemy;
-//    }
-//
-//    public void setProbOfEnemy(double probOfEnemy) {
-//        this.probOfEnemy = probOfEnemy;
-//    }
 
     public String getFileAddress() {
         return fileAddress;
@@ -181,14 +161,6 @@ public class SimEnvironment extends SimStateSweep {
 
     public void setInputDataDirectory(String inputDataDirectory) {
         this.inputDataDirectory = inputDataDirectory;
-    }
-
-    public int getnState() {
-        return nState;
-    }
-
-    public void setnState(int nState) {
-        this.nState = nState;
     }
 
     public boolean isInputData() {

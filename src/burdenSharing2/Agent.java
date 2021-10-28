@@ -21,8 +21,9 @@ import sim.util.Bag;
 import sweep.GUIStateSweep;
 
 /**
- * This is BurdenSharing2_2021-09-03, which update all matrix after each agent's move. Copy from 2021-08-21.
- * New: (1) adjust the cost term of enemies only (2) use the original A_ij and A_kj parameters
+ * This is BurdenSharing2_2021-10-05, which update all matrix after each agent's move. Copy from 2021-10-01.
+ * New: (1) include original enemies and allies of enemies only. 
+ * (2) if currentU>=0.2 or <=0.2, stop making friends
  * 
  * @author kaiyinlin
  */
@@ -60,6 +61,7 @@ public class Agent implements Steppable {
      *                          Constructor
      * **********************************************************************
      */
+    //this one is used for random generated input
     public Agent(SimEnvironment state, int x, int y, int id, double capability, int democracy, int culture) {
         super();
         this.x = x;
@@ -71,17 +73,13 @@ public class Agent implements Steppable {
         //attribute vector
         attribute[0] = capability;
         attribute[1] = (double) culture;
-        if (this.democracy == 1)
-            attribute[2] = 1;
-        else
-            attribute[2] = 0;
+        attribute[2] = democracy;
         //relations
         SRG = new HashSet<Integer>();
         neighbors = new HashSet<Integer>();
         potentialAllies = new HashSet<Integer>();
         currentStepAlliance = new HashSet<Integer>();
         alliance = new HashSet<Integer>();
-//		similarCulture = new HashSet<Integer>();
 
         //set the color for agent based on the enemyTypeA
         float colorCapability = (float) this.capability;
@@ -92,6 +90,7 @@ public class Agent implements Steppable {
 
     }
 
+    //this is used for real world input data
     public Agent(SimEnvironment state, int x, int y, int id, double capability, int democracy, int culture,
                  Set<Integer> neighbors, Set<Integer> alliance, Set<Integer> SRG) {
         super();
@@ -104,25 +103,21 @@ public class Agent implements Steppable {
         //attribute vector
         attribute[0] = capability;
         attribute[1] = (double) culture;
-        if (this.democracy == 1)
-            attribute[2] = 1;
-        else
-            attribute[2] = 0;
+        attribute[2] = democracy;
         //relations
         this.SRG = SRG;
         this.alliance = alliance;
         this.neighbors = neighbors;
         currentStepAlliance = new HashSet<Integer>();
         potentialAllies = new HashSet<Integer>();
-//        System.out.println(this.alliance.toString());
-//		similarCulture = new HashSet<Integer>();
+
 
         //set the color for agent based on the enemyTypeA
         float colorCapability = (float) this.capability;
-        if (democracy == 1)
-            setColor(state, (float) 0, (float) 0, (float) 1, (float) colorCapability);//typeA, blue color
+        if (this.democracy == 1)
+            setColor(state, (float) 0, (float) 0, (float) 1, 1);//typeA, blue color
         else
-            setColor(state, (float) 1, (float) 0, (float) 0, (float) colorCapability); //typeB, red color
+            setColor(state, (float) 1, (float) 0, (float) 0, 1); //typeB, red color
 
     }
 
@@ -134,22 +129,17 @@ public class Agent implements Steppable {
      */
     @Override
     public void step(SimState state) {
-        System.out.println("CurrentStep: "+ state.schedule.getTime());
+        if(this.id == 260 || this.id== 345) {
+        	System.out.println("agent_id: "+ this.id);
+            System.out.println("neighbors: " + this.neighbors.toString());
+        }
         currentStep = state.schedule.getSteps();
         SimEnvironment Environment = (SimEnvironment) state;
-        System.out.println("this.id = " + this.id + "    currentStep = " + state.schedule.getTime() + "   ordering utility = " + this.orderingUtility);
-//		System.out.println("last step alliance.size = " + this.alliance.size());
-        if (currentStep == 0 && Environment.dataName.length() == 0) {
-            //define neighbors
-            findNeighbors((SimEnvironment) state); //define neighbors
-        }
         //calculate the utility for each other agent
         allUtility(Environment, this);
-//		System.out.println("utilityOfAll = " + Arrays.toString(utilityOfAll));
+
         //*********************END OF CALCULATE THE UTILITY OF ALL******************************
-        allianceList = new int[Environment.nState];
         potentialAllies = Utils.getPotentialAllies((SimEnvironment) state, this.id);
-//		System.out.println("potentialAllies =" + potentialAllies.toString());
         Agent allyJ = highestRanked((SimEnvironment) state, potentialAllies); //highest rank
         if (currentStepAlliance.isEmpty()) { //if this country has no friend so far
             //check if need MORE partners, if so, provide the offer
@@ -158,7 +148,7 @@ public class Agent implements Steppable {
             //compare this agent's potential allies with current allies
             Agent currentLowestRanked = lowestRanked(Environment, this);
             if (Utils.utility(Environment, this, allyJ) > Utils.utility(Environment, this, currentLowestRanked)) { //if current allies are bad
-                resetCurrentAllies(Environment, this);
+                resetCurrentStepAllies(Environment, this);
                 provideOffer(Environment, allyJ);
             } else { //if current allies are good
                 provideOffer(Environment, allyJ);
@@ -167,7 +157,6 @@ public class Agent implements Steppable {
         //**************************END OF MAKING FRIENDS*********************************************************
         //update the allianceList for all agents
         updateAllCurrentStepAllianceList(Environment, Environment.allAgents);
-        updateAllUtility(Environment.allAgents);
         updateAllEnemyList(Environment, Environment.allAgents); //this is only for data checking, should not include to potential ally calculation
 
     }
@@ -203,12 +192,10 @@ public class Agent implements Steppable {
             Arrays.fill(newAllianceList, 0);
             if (a.currentStepAlliance.size() > 0) {
                 for (int ca : a.currentStepAlliance) {
-//					a.alliance.add(ca.id);
                     newAllianceList[state.getIndex(ca)] = 1;
                 }
             }
             a.currentStepAllianceList = newAllianceList;
-//			System.out.println("a.id = " + a.id + "    currentStepAllianceList = " + Arrays.toString(a.currentStepAllianceList));
         }
     }
 
@@ -216,13 +203,6 @@ public class Agent implements Steppable {
         for (Agent a : allAgents.values()) {
             Set<Integer> currentEnemy = Utils.getAllEnemies(state, a.id);
             int[] currentEnemyList = Utils.convertSetToList(state, currentEnemy, allAgents.size());
-//			System.out.println("a.id = " + a.id + "    currentEnemy = " + Arrays.toString(currentEnemyList));
-        }
-    }
-
-    public void updateAllUtility(Map<Integer, Agent> allAgents) {
-        for (Agent a : allAgents.values()) {
-//			System.out.println("a.id = " + a.id + "    utilityList = " + Arrays.toString(a.utilityOfAll));
         }
     }
 
@@ -250,41 +230,6 @@ public class Agent implements Steppable {
      * ******************************************************************************
      */
 
-    /*
-     * Define neighbors
-     */
-    public Set<Integer> findNeighbors(SimEnvironment state) {
-//		Bag allAgents = state.sparseSpace.getAllObjects();
-        for (Agent p : state.allAgents.values()) {
-//			Agent p = (Agent) allAgents.objs[i]; //look for a potential neighbor p
-            if (!(this.equals(p))) { //avoid counting itself as a neighbor
-                if (p.x == this.x) {
-                    if (this.y == 0) { //deal with torus problem
-                        if (p.y == Math.sqrt(state.nState) - 1 || p.y == 1) this.neighbors.add(p.id);
-                    } else if (this.y == Math.sqrt(state.nState) - 1) { //deal with torus problem
-                        if (p.y == 0 || p.y == Math.sqrt(state.nState) - 2) this.neighbors.add(p.id);
-                    } else { //in the middle
-                        if (p.y == this.y - 1 || p.y == this.y + 1) { //add two neighbors
-                            this.neighbors.add(p.id);
-                        }
-                    }
-                }//end p.x==this.x
-                if (p.y == this.y) {
-                    if (this.x == 0) {//deal with torus problem
-                        if (p.x == Math.sqrt(state.nState) - 1 || p.x == 1) this.neighbors.add(p.id);
-                    } else if (this.x == Math.sqrt(state.nState) - 1) {//deal with torus problem
-                        if (p.x == 0 || p.x == Math.sqrt(state.nState) - 2) this.neighbors.add(p.id);
-                    } else {//in the middle
-                        if (p.x == this.x - 1 || p.x == this.x + 1) { //add two neighbors
-                            this.neighbors.add(p.id);
-                        }
-                    }
-                } //end p.y=this.y
-            }
-        }//end of for
-//		System.out.println("this id = " + this.id + "how many neighbors = " + neighbors.size());
-        return neighbors;
-    }
 
     /*
      * NeighborList for experimenter to output neighbor matrix
@@ -294,24 +239,10 @@ public class Agent implements Steppable {
         Arrays.fill(neighborList, 0);
         for (int a : neighbors) {
             neighborList[state.getIndex(a)] = 1;
-//			System.out.println("neighbor's id = " + a);
         }
         return neighborList;
     }
-    /*
-     * cultureList for experimenter to output culture matrix
-     */
-//	public int[] cultureList(SimEnvironment state){
-//		Bag allAgents = state.sparseSpace.getAllObjects();
-//		int[] cultureList = new int[allAgents.numObjs];
-//		Arrays.fill(cultureList, 0);
-//		for(int a : similarCulture) {
-//			cultureList[state.agentIdList.indexOf(a)] = 1;
-//		}
-//		System.out.println("similarCulture = " + similarCulture.toString());
-//		System.out.println("cultureList = " + Arrays.toString(cultureList));
-//		return cultureList;
-//	}
+
 
     /*
      * ****************************************************************************************
@@ -322,7 +253,6 @@ public class Agent implements Steppable {
      * Find out friends, and rank their utilities. Choose the highest ranked agents to offer the alliance
      */
     public Agent highestRanked(SimEnvironment state, Set<Integer> potentialAllies) {
-//		Bag allAgents = state.sparseSpace.getAllObjects(); 
         if (potentialAllies.isEmpty() || potentialAllies.size() == 0) {
             return null;
         }
@@ -332,13 +262,10 @@ public class Agent implements Steppable {
             int paIndex = state.getIndex(pA);
             double utilityOfpA = utilityOfAll[paIndex];
             if (utilityOfpA > utilityBase) {
-//				System.out.println("replace max Utility Agent, with utility "+ utilityOfpA);
                 Agent potentialA = state.allAgents.get(pA);
                 maxUtilityAgent = potentialA;
                 utilityBase = utilityOfpA;
             }
-//			System.out.println("Current Max Utility Agent "+ maxUtilityAgent.id);
-//			System.out.println("Current Utility Base "+ utilityBase);
         }
         return maxUtilityAgent;
     }
@@ -368,33 +295,22 @@ public class Agent implements Steppable {
      */
     public void provideOffer(SimEnvironment state, Agent allyJ) {
         boolean needMorePartners;
-        if (currentUtility(state, this) >= 0)
-//        if (currentUtility(state, this) >= 0.2 || currentUtility(state, this) <= -0.2)
+        if (currentUtility(state, this) > 0.2 || currentUtility(state, this) < -0.2)
             needMorePartners = false;//if needMorePartners == false, then stop making friends
         else needMorePartners = true;
         int whileLoopNum = 0;
         int initialPotentialAlliesSize = this.potentialAllies.size();
-        if (needMorePartners == false)
-//			System.out.println("No Need Partners!");
-            if (whileLoopNum == initialPotentialAlliesSize - 1) {
-//			System.out.println("whileLoopNum = " + whileLoopNum);
-//			System.out.println("LAST LOOP! WHILE LOOP MAXIMUM IS REACHING !!!!!!!!!!!!!!!!!!!!!!!!!");
-            }
+
         while (needMorePartners && whileLoopNum < initialPotentialAlliesSize) { //making some friends
-//			System.out.println("whileLoopNum = " + whileLoopNum);
-//			System.out.println("maxLoopSize (potential ally size)= " + initialPotentialAlliesSize);
-//			System.out.println("need more partners!");
             Set<Integer> newPotentialAllies = potentialAllies;
             allyJ = highestRanked((SimEnvironment) state, newPotentialAllies); //highest rank
-            //accepting offer
+            //offer receiving process
             if (allyJ != null) {
                 //provide offer to highest-ranked agent and see if it accepts the offer
-//				System.out.println("highest ranked cadidate id = " + allyJ.id);
                 acceptOffer((SimEnvironment) state, allyJ);
                 potentialAllies.remove(allyJ.id); //remove the highest ranked ally from potentialAllies list
             }
-            if (currentUtility(state, this) >= 0) needMorePartners = false;
-//            if (currentUtility(state, this) >= 0.2 || currentUtility(state, this) <= -0.2) needMorePartners = false;
+            if (currentUtility(state, this) > 0.2 || currentUtility(state, this) < -0.2) needMorePartners = false;
             else needMorePartners = true;
             whileLoopNum++;
 
@@ -406,53 +322,40 @@ public class Agent implements Steppable {
      */
     public boolean acceptOffer(SimEnvironment state, Agent allyJ) {
         Set<Integer> allyJpotentialAllies = Utils.getPotentialAllies(state, allyJ.id);
-//		System.out.println("allyJPotentialAllies = " + allyJpotentialAllies.toString()); //checking
         if (allyJ.utilityOfAll == null) {
-//			System.out.println("getAllEnemies to evaluate offer = " + Utils.getAllEnemies(state, allyJ.id).toString());
             allUtility(state, allyJ);
         }
         //check if the offer giver is one of the potential allies
         if (!allyJpotentialAllies.contains(this.id)) {
-            //reject the offer, situation 1
-//			System.out.println("Situation 1 (Rejection): Can't accept offer becuase of this.id is not in allyJ's potential Allies");
+            //Situation 1 (Rejection): Can't accept offer because of this.id is not in allyJ's potential allies
             return false;
-        } else { //allyJ is a qualified potential allies. 2. check the u_ji
+        } else { //allyJ is a qualified potential allies. check the u_ji then
             if (Utils.utility((SimEnvironment) state, allyJ, this) <= 0) {
-                //reject the offer, situation 2
-//				System.out.println("Situation 2 (Rejection): reject the offer becuase u_ji is less than zero");
+                //Situation 2 (Rejection): reject the offer because u_ji is less than zero (not worth to form alliance)
                 return false;
             } else { //u_ji is greater than 0, check if this allyJ need more friends
-                if (currentUtility(state, allyJ) < 0) {  //need more friends
-//            	if (currentUtility(state, allyJ) <= 0.2 && currentUtility(state, allyJ) >= -0.2) {
-                    //situation 3: accept the offer --> u_ji is greater than 0, and allyJ needs more allies
+                if (currentUtility(state, allyJ) <= 0.2 && currentUtility(state, allyJ) >= - 0.2) {  //need more friends
+                    //accept the offer --> u_ji is greater than 0, and allyJ needs more allies
+                	//Situation 3 (Acceptance): Recipient accept the offer based on need.
                     this.currentStepAlliance.add(allyJ.id);
                     allyJ.currentStepAlliance.add(this.id);
-                    this.cost = Math.pow(currentStepAlliance.size(), 2);
-                    allyJ.cost = Math.pow(allyJ.currentStepAlliance.size(), 2);
-//					System.out.println("Situation 3 (Acceptence): Recipient accept the offer based on need.");
-//					System.out.println("allyJ's allEnemies = " + Utils.getAllEnemies(state, allyJ.id).toString());
                     return true;
                 } else {    //no need more friends, but check whether current allies are good or the new offer is better
                     Agent currentLowestRanked = lowestRanked(state, allyJ);
                     if (currentLowestRanked != null) { //if this allyJ already has some friend
                         //check if the offer is better than current friends
+                    	//Situation 4 (Acceptance): Recipient replaces current lowest ally and accept the offer
                         if (Utils.utility((SimEnvironment) state, allyJ, this) > Utils.utility(state, allyJ, currentLowestRanked)) {
                             allyJ.currentStepAlliance.remove(currentLowestRanked.id);
                             currentLowestRanked.currentStepAlliance.remove(allyJ.id);
-//							System.out.println("remove lowest ranked allies = " + currentLowestRanked.id);
                             this.currentStepAlliance.add(allyJ.id);
                             allyJ.currentStepAlliance.add(this.id);
-                            this.cost = Math.pow(currentStepAlliance.size(), 2);
-                            allyJ.cost = Math.pow(allyJ.currentStepAlliance.size(), 2);
-//							System.out.println("Situation 4 (Acceptence): Recipient replaces current lowest ally and accept the offer");
-//							System.out.println("allyJ's allEnemies = " + Utils.getAllEnemies(state, allyJ.id).toString());
                             return true;
                         } else { //current allies are better, rejection
-//							System.out.println("Situation 5 (Rejection): reject the offer becuase current alliance is perfect");
+                        	//Situation 5 (Rejection): reject the offer because current alliance is perfect
                             return false;
                         }
-                    } else { //this allyJ doesn't have current allies but it doesn't need friends
-//						System.out.println("Situation 6 (Rejection): reject the offer because it doesn't need any friends");
+                    } else { //this allyJ doesn't have allies but it doesn't need friends (current U > 0)
                         return false;
                     }
                 } // end of no need more friends
@@ -475,14 +378,10 @@ public class Agent implements Steppable {
         	Agent sec = state.allAgents.get(s);
         	SRGcapability += 0.5 * sec.capability;
         }
-//		System.out.println("SRGcapability = " + SRGcapability);
-        if (a.currentStepAlliance.size() == 0 && a.alliance.size() == 0) {
-//			System.out.println("#" + a.id + "capability = " + a.capability);
+        if (a.currentStepAlliance.size() == 0 && a.alliance.size() == 0) { //equal to no currentStateAlliance
             U = a.capability - SRGcapability;
-//			System.out.println("#" + a.id + "  has no allies and the current utility is " + U);
         } else {
             Set<Integer> currentStateAlliance = Utils.getCurrentStateAlliance(state, a.id);
-//			System.out.println("currentStateAlliance = " + currentStateAlliance.toString());
 			a.cost = Math.pow(currentStateAlliance.size(), 1.2);
             //calculate the sum of alliacne's utility
             for (int j : currentStateAlliance) {
@@ -490,16 +389,16 @@ public class Agent implements Steppable {
                 sumU_ij += u_ij;
             }
             U = a.capability + sumU_ij - 0.2 * a.cost - SRGcapability;
-//			System.out.println("sumU_ij = " + sumU_ij + " a.cost = " + 0.2* a.cost);
-//			System.out.println("#" + a.id + "  has some allies and the current utility is " + U);
         }
         return U;
     }
 
     /*
-     * Reset the currentAllies
+     * Reset the currentStepAllies
+     * When someone has allies before his turn, and the potential allies has higher u_ij, 
+     * this country needs to give up current step allies.
      */
-    public void resetCurrentAllies(SimEnvironment state, Agent agent) {
+    public void resetCurrentStepAllies(SimEnvironment state, Agent agent) {
         List<Integer> currentStepAllianceList = new ArrayList<Integer>(agent.currentStepAlliance);
         for (int oA : currentStepAllianceList) {
             Agent oldAlly = state.getAgent(oA);

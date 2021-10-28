@@ -28,11 +28,7 @@ public class Experimenter extends Observer {
     String fileName_neighbor = dateFormat.format(date) + "neighbor";
     String fileName_enemy = dateFormat.format(date) + "enemy";
     String fileName_utility = dateFormat.format(date) + "utility";
-    //	String fileName_culture = dateFormat.format(date) + "culture";
     String fileName_ALL = dateFormat.format(date) + "ALL";
-    //	File allianceCSVFile = new File(fileDirectory + fileName_alliance + ".csv");
-    //	File neighborCSVFile = new File("/Users/kaiyinlin/Desktop/" + fileName_neighbor + ".csv");
-    //	File enemyCSVFile = new File("/Users/kaiyinlin/Desktop/" + fileName_enemy + ".csv");
     boolean headerWritten_a = false;
     boolean headerWritten_n = false;
     boolean headerWritten_e = false;
@@ -95,7 +91,6 @@ public class Experimenter extends Observer {
                     if (((SimEnvironment) state).deleteFile){
                         deleteFileInFileAddress((SimEnvironment) state);
                     }
-//                    state.schedule.clear();
                     ((SimEnvironment) state).setStateExist(false);
                     state.kill();
                     state.finish();
@@ -108,13 +103,11 @@ public class Experimenter extends Observer {
             }
 
             // kill the simulation if reaches maxround
-//            System.out.println("Step: "+ state.schedule.getTime());
             if (state.schedule.getTime() == MAX_ROUND) {
                 if (((SimEnvironment) state).appendInfo) {
                     appendInputInfo(this.fileDirectory, (SimEnvironment) state);
                 }
                 System.out.println("Reach Maximum rounds! Terminate the simulation.");
-//                state.schedule.clear();
                 if (((SimEnvironment) state).deleteFile){
                     deleteFileInFileAddress((SimEnvironment) state);
                 }
@@ -122,14 +115,12 @@ public class Experimenter extends Observer {
                 state.kill();
                 state.finish();
             }
-         // schedule for next time
+            // schedule for next time
+            //not use scheduleRepeating because we need to schedule the order for each agent
             System.out.println("Schedule Agents");
             List<Integer> scheduleList = Utils.getScheduleOrder((SimEnvironment) state);
-//            state.schedule.clear();
             int o = 1;
             for (int s : scheduleList) {
-                Agent a = ((SimEnvironment) state).getAgent(s);
-//                a.event = state.schedule.scheduleRepeating(((SimEnvironment) state).getAgent(s), o, 1.0);
                 state.schedule.scheduleOnce(((SimEnvironment) state).getAgent(s), o);
                 o++;
             }
@@ -173,7 +164,6 @@ public class Experimenter extends Observer {
      * ***************************************************************************
      */
     public void dataCollection(String fileDirectory, SimEnvironment state) throws IOException {
-//        File dataCollectionCSVFile = new File(fileDirectory + fileName_ALL + ".csv");
         File dataCollectionCSVFile = new File(fileDirectory + state.year + "data.csv");
         if (!dataCollectionCSVFile.exists()) {
             System.out.println("Let's create a new csv file for data collection");
@@ -211,7 +201,7 @@ public class Experimenter extends Observer {
                 writer.append(",");
                 writer.append(Integer.toString(b.democracy));//j's democracy
                 writer.append(",");
-                writer.append(Integer.toString(a.neighborList(state)[bIndex]));//i's neighbors
+                writer.append(Integer.toString(a.neighborList(state)[bIndex]));//i's neighbors;
                 writer.append(",");
                 Set<Integer> allEnemies = Utils.getAllEnemies((SimEnvironment) state, a.id);
                 int[] overallEnemyList = Utils.convertSetToEnemyList((SimEnvironment) state, allEnemies, state.agentIdList.size(), a.SRG);
@@ -219,7 +209,7 @@ public class Experimenter extends Observer {
                 writer.append(",");
                 writer.append(Integer.toString(a.allianceList[bIndex]));//i's allies
                 writer.append(",");
-                writer.append(Double.toString(a.utilityOfAll[bIndex]));
+                writer.append(Double.toString(a.utilityOfAll[bIndex]));//u_ij
                 writer.append(",");
                 writer.append(Double.toString(a.currentUtility(state, a))); //i's currentU
                 writer.append('\n');
@@ -258,7 +248,6 @@ public class Experimenter extends Observer {
             writer.append(",");
             writer.append("c" + Integer.toString(a.id));
             writer.append(",");
-//			System.out.println(Arrays.toString(a.allianceList));
             writer.append(Arrays.toString(a.currentStepAllianceList).replace("[", "").replace("]", ""));
             a.alliance = Stream.of(a.alliance, a.currentStepAlliance)
                     .flatMap(x -> x.stream())
@@ -271,7 +260,6 @@ public class Experimenter extends Observer {
             }
             if (a.alliance.size() > 0) {
                 for (int ca : a.alliance) {
-//					a.alliance.add(ca.id);
                     newAllianceList[state.getIndex(ca)] = 1;
                 }
             }
@@ -287,7 +275,6 @@ public class Experimenter extends Observer {
             writer.append(",");
             writer.append("c" + Integer.toString(a.id));
             writer.append(",");
-//			System.out.println(Arrays.toString(a.allianceList));
             writer.append(Arrays.toString(a.allianceList).replace("[", "").replace("]", ""));
             writer.append('\n');
         }
@@ -338,7 +325,6 @@ public class Experimenter extends Observer {
             writer.append(",");
             writer.append(Double.toString(a.attribute[2]));
             writer.append(",");
-//			System.out.println(Arrays.toString(a.neighborList));
             writer.append(Arrays.toString(a.neighborList((SimEnvironment) state)).replace("[", "").replace("]", ""));
             writer.append(",");
             writer.append(Double.toString(Utils.initialNeed((SimEnvironment) state, a)));
@@ -507,6 +493,13 @@ public class Experimenter extends Observer {
         }
     }
 
+    /**
+     * This method is used to output the common allies two states have.
+     * List common allies between state_a and state_b
+     * @param a
+     * @param b
+     * @return
+     */
     public ArrayList<Integer> commonAlliance(Agent a, Agent b) {
         if (a.currentStepAlliance == null)
             return null;
@@ -539,46 +532,7 @@ public class Experimenter extends Observer {
             }
         }
     }
-
-//	/*
-//	 * culture similarity matrix
-//	 */
-//	public void cultureMatrix(String fileDirectory) throws IOException{
-//
-//		File cultureCSVFile = new File(fileDirectory + fileName_culture + ".csv");
-//		if(!cultureCSVFile.exists()) {
-//			System.out.println("Let's create a new csv file for culture similarity matrix!");
-//			cultureCSVFile.createNewFile();
-//		}
-//		FileWriter writer = new FileWriter(cultureCSVFile.getAbsoluteFile(), true);
-//		if(headerWritten_c == false) {
-//			writer.append("Step");
-//			writer.append(',');
-//			writer.append("id");
-//			writer.append(',');
-//			for(int i=0; i<agents.numObjs; i++) {
-//				if(i != 0) {
-//					writer.append(",");
-//				}
-//				writer.append("c"+i);
-//			}
-//			writer.append('\n');
-//		}
-//		headerWritten_c = true;
-//		for(int i=0; i<agents.numObjs; i++) {
-//			Agent a = (Agent)agents.objs[i];
-//			writer.append(Double.toString(state.schedule.getTime()+1));
-//			writer.append(",");
-//			writer.append("c" + Integer.toString(a.id));
-//			writer.append(",");
-//			// get same culture countries
-//			writer.append(Arrays.toString(a.cultureList((SimEnvironment)state)).replace("[", "").replace("]", ""));
-//			writer.append('\n');
-//		}
-//		writer.flush();
-//		writer.close();
-//	}
+    
 
 }
-
 
