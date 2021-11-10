@@ -1,4 +1,6 @@
-### burdenSharing_securityCoop V7 - gitHub branch
+### burdenSharing_securityCoop v1.06 : github version
+
+
 
 ### process of automatically run
 
@@ -9,16 +11,22 @@
 
 **To change the simulation to manually run**, the controller is located at the graphicGUI. The variable is "autoMode".
 
-This is BurdenSharing2_2021-10-12, which update all matrix after each agent's move. Copy from 2021-10-05.
+This is BurdenSharing2_2021-10-05, which update all matrix after each agent's move. Copy from 2021-10-01.
 New updates: 
 * (1) include original enemies and allies of enemies only. 
-* (2) When providing offers: if currentU > 0.2 stop making friends; if currentU < 0 && abs(currentU) > abs(beforeU), stop making friends
-* (3) When accepting an offer: if the current utility of allyJ is < 0, accept the offer (data_13)
+* (2) if currentU>=0.2 or <=0.2, stop making friends
+* (3) secondary enemies rate: 0.5
+* (4) cost term = $$0.2 \times T^{1.2}$$ (Data_v11); cost term = $$0.2 \times T^2$$ (Data_v12)
 
-Updates:
-* 2021-10-14: When accepting the offer: if the current utility of allyJ is < 0 and usage of potential ally > 0, accept the offer (data_14)
+Update 2021-10-27
+
+* (1) if currentU > 0.2 or currentU < -0.2, stop making alliance
+* (2) change the sequence of data reading: i --> j
+* (3) correct the use of currentStateAlliance and currentStepAlliance. At some circumstance, should use currentStateAlliance instead of currentStepAlliance
+
+
 
 **Need to use MASON Plus 8 + **
 
-
+** GitHub -- burdenSharing_securityCoop V6**
 

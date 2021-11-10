@@ -16,9 +16,6 @@ public class SimEnvironment extends SimStateSweep {
     /*
      * Burden sharing parameters
      */
-    public int nState = 100;
-    public double probOfDemocracy = 0.7; // the probability of being democratic
-    public double probOfEnemy = 0.3; // the probability of enemy type; two types of enemyType
     public String fileAddress = "/Users/kaiyinlin/Desktop/merger/";
     public String inputDataDirectory = "/Users/kaiyinlin/Desktop/dataByYear/";
     public boolean inputData = true;
@@ -63,17 +60,11 @@ public class SimEnvironment extends SimStateSweep {
      */
     public void start() {
         super.start();
-        // should I reset all data here? Take a look of kh-model
         this.make2DSpace(spaces.SPARSE, gridWidth, gridHeight); // make the space
         getDataInformation();
         agentIdList = dataInformation.keySet().stream().collect(Collectors.toList());
         makeAgents();
-        assignEnemies();
-//		assignSimilarCulture();
-//		for (Integer ii : agentIdList) {
-//			System.out.println("id" + ii);
-//			System.out.println(allAgents.get(ii).neighbors.toString());
-//		}
+        System.out.println("END OF MAKEAGENTS ================");
         if (observer != null) {
             observer.initialize(sparseSpace, Spaces.SPARSE);// initialize the experimenter by calling initialize in the
             // parent class
@@ -105,112 +96,32 @@ public class SimEnvironment extends SimStateSweep {
      * ***************************************************************************
      */
     public void makeAgents() {
-        if (inputData == false) {
-            int id = 0;
-            if (nState > gridWidth * gridHeight) {
-                System.out.println("Too many agents! Please reduce the number of agents.");
-                return;
-            }
-            long seed = 20;
-            Random r = new Random();
-            r.setSeed(seed);
-            for (int i = 0; i < Math.sqrt(nState); i++) {
+    	for (Integer agentId : agentIdList) {
+            int xloc = random.nextInt(gridWidth);
+            int yloc = random.nextInt(gridHeight);
+            int culture = 0;
+            InfoIdentifier agentInfo = dataInformation.get(agentId);
+            Agent c = new Agent(this, xloc, yloc, agentInfo.getId(), agentInfo.getCapability(),
+                    agentInfo.getDemocracy(), culture,
+                    agentInfo.getNeighbor(), agentInfo.getAlliance(), agentInfo.getEnemy());
+            
+            c.utilityOfAll = new double[agentIdList.size()];
+            Arrays.fill(c.utilityOfAll, 0);
+            this.allAgents.put(c.id, c);
+            sparseSpace.setObjectLocation(c, xloc, yloc);
+        }
 
-                int xloc = i;
-                for (int j = 0; j < Math.sqrt(nState); j++) {
-                    int yloc = j;
-                    double capability = r.nextDouble();
-                    double random = r.nextDouble();
-//					System.out.println("demecracy r = " + random);
-                    boolean democracy = random < probOfDemocracy;
-                    int culture = r.nextInt(7) + 1; // the culture categories range from 1-7
-                    Agent c = new Agent(this, xloc, yloc, id, capability, democracy, culture);
-                    this.allAgents.put(c.id, c);
-//					System.out.println("c.capability = " + c.capability);
-                    c.event = schedule.scheduleRepeating(c);
-                    sparseSpace.setObjectLocation(c, xloc, yloc);
-                    id++;
-                } // end of yloc
-            } // end of xloc
-        } else { //if there is an input data
-
-            // set up the agents
-            for (Integer agentId : agentIdList) {
-                int xloc = random.nextInt(gridWidth);
-                int yloc = random.nextInt(gridHeight);
-                int culture = 0;
-                InfoIdentifier agentInfo = dataInformation.get(agentId);
-                Agent c = new Agent(this, xloc, yloc, agentInfo.getId(), agentInfo.getCapability(),
-                        agentInfo.getDemocracy() == 1, culture,
-                        agentInfo.getNeighbor(), agentInfo.getAlliance(), agentInfo.getEnemy());
-                c.utilityOfAll = new double[agentIdList.size()];
-                Arrays.fill(c.utilityOfAll, 0);
-                this.allAgents.put(c.id, c);
-                sparseSpace.setObjectLocation(c, xloc, yloc);
-            }
-
-            // put one by one to schedular
-            List<Integer> scheduleList = Utils.getScheduleOrder(this);
-            int o = 1;
-            for (int s : scheduleList) {
-                Agent a = this.getAgent(s);
-                schedule.scheduleOnce(allAgents.get(s), o);
-//                a.event = this.schedule.scheduleRepeating(this.getAgent(s), o, 1.0);
-                o++;
-            }
-
+        // put one by one to schedular
+        List<Integer> scheduleList = Utils.getScheduleOrder(this);
+        int o = 1;
+        for (int s : scheduleList) {
+            Agent a = this.getAgent(s);
+            schedule.scheduleOnce(allAgents.get(s), o);
+            o++;
         }
 
     }
 
-    /*
-     * Assign initial enemies when no input data
-     */
-    public void assignEnemies() {
-        if (!inputData) {
-            // get all pair of n-agents
-            List<Integer> agentIds = new ArrayList<Integer>(this.allAgents.keySet());
-            // if they are, update both agents' enemy list
-            Random r = new Random();
-            long seed = 10;
-            r.setSeed(seed);
-            for (int i = 0; i < (agentIds.size() - 1); i++) {
-                Agent a = this.allAgents.get(agentIds.get(i));
-                for (int j = (i + 1); j < agentIds.size(); j++) {
-                    Agent opponent = this.allAgents.get(agentIds.get(j));
-//					boolean enemy = Math.random() < this.probOfEnemy;
-                    double random = r.nextDouble();
-//					System.out.println("enemy r = " + random);
-                    boolean enemy = random < this.probOfEnemy;
-                    if (enemy) {
-                        a.SRG.add(agentIds.get(j));
-                        opponent.SRG.add(agentIds.get(i));
-//						System.out.println("enemy pair: " + agentIds.get(i) + ";   " + agentIds.get(j));
-                    }
-                }
-            }
-        }
-    }
-
-
-    /*
-     * Assign similar culture
-     */
-
-//	public void assignSimilarCulture() {
-//		if (dataName.length() > 0) {
-//			for (Integer agentId : agentIdList) {
-//				Agent a = this.allAgents.get(agentId);
-//				InfoIdentifier agentInfo = dataInformation.get(agentId);
-//				for(Integer agentID : agentIdList) {
-//					Agent b = this.allAgents.get(agentId);
-//					if(dataInformation.get(a.id).getCulture().get(b.id) == 1 && !a.equals(b)){
-//						a.similarCulture.add(b.id);
-//					}
-//				}
-//			}
-//		}
-//	}
 
     /*
      * Get a specific agent by input its id
@@ -231,21 +142,6 @@ public class SimEnvironment extends SimStateSweep {
      * *****************************************************************************
      * ****
      */
-    public double getProbOfDemocracy() {
-        return probOfDemocracy;
-    }
-
-    public void setProbOfDemocracy(double probOfDemocracy) {
-        this.probOfDemocracy = probOfDemocracy;
-    }
-
-    public double getProbOfEnemy() {
-        return probOfEnemy;
-    }
-
-    public void setProbOfEnemy(double probOfEnemy) {
-        this.probOfEnemy = probOfEnemy;
-    }
 
     public String getFileAddress() {
         return fileAddress;
@@ -261,14 +157,6 @@ public class SimEnvironment extends SimStateSweep {
 
     public void setInputDataDirectory(String inputDataDirectory) {
         this.inputDataDirectory = inputDataDirectory;
-    }
-
-    public int getnState() {
-        return nState;
-    }
-
-    public void setnState(int nState) {
-        this.nState = nState;
     }
 
     public boolean isInputData() {
