@@ -85,7 +85,6 @@ public class Utils {
 
         // adding current personal enemies
         allEnemies = Stream.of(allEnemies, targetAgent.SRG).flatMap(x -> x.stream()).collect(Collectors.toSet());
-
         // adding all friends' enemies
 //        for (int ii : allAlliances) {
 //            Set<Integer> currentAgentEnemies = allAgents.get(ii).SRG;
@@ -103,7 +102,6 @@ public class Utils {
             Set<Integer> enemyAllAlliances = new HashSet<Integer>();
             enemyAllAlliances = Stream.of(enemyPreviousAlliances, enemyCurrentStepAlliances).flatMap(x -> x.stream())
                     .collect(Collectors.toSet());
-
             allEnemies = Stream.of(allEnemies, enemyAllAlliances).flatMap(x -> x.stream()).collect(Collectors.toSet());
 
         }
@@ -134,11 +132,12 @@ public class Utils {
 
         // calculate the enemy of current Agent
         Set<Integer> allEnemies = getAllEnemies(state, agentId);
-
+//        System.out.println("allEnemies in potential allies function = " + allEnemies.toString());
         Set<Integer> potentialAllies = new HashSet<>(state.allAgents.keySet());
         potentialAllies.removeAll(allEnemies);
         potentialAllies.removeAll(targetAgent.alliance); // remove current friend from the potential list
         potentialAllies.remove(agentId); // remove itself
+//        System.out.println("potentialAllies in function = " + potentialAllies.toString());
         return potentialAllies;
     }
 

@@ -134,23 +134,28 @@ public class Agent implements Steppable {
         SimEnvironment Environment = (SimEnvironment) state;
         //calculate the utility for each other agent
         allUtility(Environment, this);
-
+        //allies cannot be enemies
+        Set<Integer> allEnemies = Utils.getAllEnemies(Environment, this.id);
+//        System.out.println("this id : " + this.id +"   allEnemies in Step = " + allEnemies.toString());
+//        System.out.println("originalSRG = " + this.SRG);
+        this.alliance = Utils.getCurrentStateAlliance(Environment, this.id);
+//        System.out.println("allies in Step : " + alliance.toString());
+        Set<Integer> intersection = allEnemies.stream().distinct().filter(alliance::contains).collect(Collectors.toSet());
+        System.out.println("intersection size = " + intersection.size());
+        if(intersection.size()>0) {
+        	for(int r : intersection) {
+        		Agent rep = (Agent) Environment.getAgent(r);
+        		alliance.remove(r);
+        		rep.alliance.remove(this.id);
+        		currentStepAlliance.remove(r);
+        		rep.currentStepAlliance.remove(r);
+        	}
+        }
+//        System.out.println("allies after release : " + alliance.toString());
         //*********************END OF CALCULATE THE UTILITY OF ALL******************************
         potentialAllies = Utils.getPotentialAllies((SimEnvironment) state, this.id);
-        Agent allyJ = highestRanked((SimEnvironment) state, potentialAllies); //highest rank
-        if (currentStepAlliance.isEmpty()) { //if this country has no friend at currentStep
-            //go ahead to offer providing process
-            provideOffer(Environment, allyJ);
-        } else { //if this country already made alliance before his turn, he can make his own choice now!
-            //compare this agent's potential allies with current allies
-            Agent currentLowestRanked = stepLowestRanked(Environment, this);
-            if (Utils.utility(Environment, this, allyJ) > Utils.utility(Environment, this, currentLowestRanked)) { //if current allies are bad
-                resetCurrentStepAllies(Environment, this);
-                provideOffer(Environment, allyJ);
-            } else { //if current allies are good
-                provideOffer(Environment, allyJ);
-            }
-        }
+//        System.out.println("potentialAllies in Step: " + potentialAllies.toString());
+        provideOffer((SimEnvironment)state);
         //**************************END OF MAKING FRIENDS*********************************************************
         //update the allianceList for all agents
         updateAllCurrentStepAllianceList(Environment, Environment.allAgents);
@@ -273,22 +278,22 @@ public class Agent implements Steppable {
      * This agent need to release lower agent to make new friend.
      * 
      */
-    public Agent stepLowestRanked(SimEnvironment state, Agent agent) {
-        if (agent.currentStepAlliance.isEmpty() || agent.currentStepAlliance.size() == 0) {
-            return null;
-        }
-        double utilityBase = 10000;
-        Agent minUtilityAgent = null;
-        for (int ca : agent.currentStepAlliance) {
-            Agent currentAlly = state.allAgents.get(ca);
-            double utilityOfcurrentAlly = Utils.utility(state, agent, currentAlly);
-            if (utilityOfcurrentAlly < utilityBase) {
-                minUtilityAgent = currentAlly;
-                utilityBase = utilityOfcurrentAlly;
-            }
-        }
-        return minUtilityAgent;
-    }
+//    public Agent stepLowestRanked(SimEnvironment state, Agent agent) {
+//        if (agent.currentStepAlliance.isEmpty() || agent.currentStepAlliance.size() == 0) {
+//            return null;
+//        }
+//        double utilityBase = 10000;
+//        Agent minUtilityAgent = null;
+//        for (int ca : agent.currentStepAlliance) {
+//            Agent currentAlly = state.allAgents.get(ca);
+//            double utilityOfcurrentAlly = Utils.utility(state, agent, currentAlly);
+//            if (utilityOfcurrentAlly < utilityBase) {
+//                minUtilityAgent = currentAlly;
+//                utilityBase = utilityOfcurrentAlly;
+//            }
+//        }
+//        return minUtilityAgent;
+//    }
     
     /*
      * Find the lowest ranked agent among current STATE allies. 
@@ -317,30 +322,46 @@ public class Agent implements Steppable {
     /*
      * provide the offer:
      */
-    public void provideOffer(SimEnvironment state, Agent allyJ) {
-        boolean needMorePartners;
-//        System.out.println("this id : " + this.id + "    currentU: " + currentUtility(state, this));
-        if (currentUtility(state, this) > 0.2 || currentUtility(state, this) < -0.2)
+    public void provideOffer(SimEnvironment state) {
+        boolean needMorePartners; //check if currentU is within the range
+        if (currentUtility(state, this) > 1.0 || currentUtility(state, this) < -1.0)
             needMorePartners = false;//if needMorePartners == false, then stop making friends
         else needMorePartners = true;
         int whileLoopNum = 0;
         int initialPotentialAlliesSize = this.potentialAllies.size();
-
+        Set<Integer> currentStateAllies = Utils.getCurrentStateAlliance(state, this.id);        
+        if(needMorePartners == false) {
+        	Agent allyJ = highestRanked(state, this.potentialAllies);
+        	if(currentStateAllies.isEmpty()) {
+        		return; //no friends, but no room for more friend. return!
+        	}else { //if this agent already has some allies, check the u_ij of lowest one
+        		Agent currentLowestRank = stateLowestRanked(state, this);
+        		if(allyJ != null && Utils.utility(state, this, allyJ) > Utils.utility(state, this, currentLowestRank)) {
+        			//if J is better, offer the alliance; try to replace the lowest one
+        			boolean acceptance = acceptOffer(state,allyJ);
+        			 //only if the alliance has been formed, release the lowest one
+        			if(acceptance == true) {
+        				Set<Integer> currentStateAllies_lowest = Utils.getCurrentStateAlliance(state, currentLowestRank.id);
+        				currentStateAllies.remove(currentLowestRank.id); //both release the alliance
+        				currentStateAllies_lowest.remove(this.id); //both release the alliance
+        			} //end of acceptance == true
+        		} //end of "J is better than lowest"	
+        	}//end of else
+        }
+        //if there is more room for new partner - needMorePartners == true
+        //provide the offer directly
         while (needMorePartners && whileLoopNum < initialPotentialAlliesSize) { //making some friends
             Set<Integer> newPotentialAllies = potentialAllies;
-            allyJ = highestRanked((SimEnvironment) state, newPotentialAllies); //highest rank
-            //offer receiving process
+            Agent allyJ = highestRanked(state, newPotentialAllies); //highest rank
             if (allyJ != null) {
                 //provide offer to highest-ranked agent and see if it accepts the offer
                 acceptOffer((SimEnvironment) state, allyJ);
                 potentialAllies.remove(allyJ.id); //remove the highest ranked ally from potentialAllies list
             }
-            if (currentUtility(state, this) > 0.2 || currentUtility(state, this) < -0.2) needMorePartners = false;
+            if (currentUtility(state, this) > 1.0 || currentUtility(state, this) < -1.0) needMorePartners = false;
             else needMorePartners = true;
             whileLoopNum++;
-
         }
-//        System.out.println("finish this round");
     }
 
     /*
@@ -360,7 +381,7 @@ public class Agent implements Steppable {
                 //Situation 2 (Rejection): reject the offer because u_ji is less than zero (not worth to form alliance)
                 return false;
             } else { //u_ji is greater than 0, check if this allyJ need more friends
-                if (currentUtility(state, allyJ) <= 0.2 && currentUtility(state, allyJ) >= - 0.2) {  //need more friends
+                if (currentUtility(state, allyJ) <= 1.0 && currentUtility(state, allyJ) >= - 1.0) {  //need more friends
                     //accept the offer --> u_ji is greater than 0, and allyJ needs more allies
                 	//Situation 3 (Acceptance): Recipient accept the offer based on need.
                     this.currentStepAlliance.add(allyJ.id);
