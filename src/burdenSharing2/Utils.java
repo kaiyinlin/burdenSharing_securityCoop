@@ -131,13 +131,11 @@ public class Utils {
         Agent targetAgent = state.allAgents.get(agentId);
 
         // calculate the enemy of current Agent
-        Set<Integer> allEnemies = getAllEnemies(state, agentId);
-//        System.out.println("allEnemies in potential allies function = " + allEnemies.toString());
+//        Set<Integer> allEnemies = getAllEnemies(state, agentId);
         Set<Integer> potentialAllies = new HashSet<>(state.allAgents.keySet());
-        potentialAllies.removeAll(allEnemies);
+        potentialAllies.removeAll(targetAgent.SRG);//remove primary enemies
         potentialAllies.removeAll(targetAgent.alliance); // remove current friend from the potential list
         potentialAllies.remove(agentId); // remove itself
-//        System.out.println("potentialAllies in function = " + potentialAllies.toString());
         return potentialAllies;
     }
 

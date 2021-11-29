@@ -132,16 +132,10 @@ public class Agent implements Steppable {
     public void step(SimState state) {
         currentStep = state.schedule.getSteps();
         SimEnvironment Environment = (SimEnvironment) state;
-        //calculate the utility for each other agent
-        allUtility(Environment, this);
         //allies cannot be enemies
         Set<Integer> allEnemies = Utils.getAllEnemies(Environment, this.id);
-//        System.out.println("this id : " + this.id +"   allEnemies in Step = " + allEnemies.toString());
-//        System.out.println("originalSRG = " + this.SRG);
         this.alliance = Utils.getCurrentStateAlliance(Environment, this.id);
-//        System.out.println("allies in Step : " + alliance.toString());
         Set<Integer> intersection = allEnemies.stream().distinct().filter(alliance::contains).collect(Collectors.toSet());
-        System.out.println("intersection size = " + intersection.size());
         if(intersection.size()>0) {
         	for(int r : intersection) {
         		Agent rep = (Agent) Environment.getAgent(r);
@@ -151,7 +145,8 @@ public class Agent implements Steppable {
         		rep.currentStepAlliance.remove(r);
         	}
         }
-//        System.out.println("allies after release : " + alliance.toString());
+      //calculate the utility for each other agent
+        allUtility(Environment, this);
         //*********************END OF CALCULATE THE UTILITY OF ALL******************************
         potentialAllies = Utils.getPotentialAllies((SimEnvironment) state, this.id);
 //        System.out.println("potentialAllies in Step: " + potentialAllies.toString());
@@ -173,7 +168,7 @@ public class Agent implements Steppable {
         a.utilityOfAll = new double[state.agentIdList.size()];
         for (Agent j : state.allAgents.values()) {
             int index = state.getIndex(j.id);
-            if (a.equals(j) || Utils.getAllEnemies(state, a.id).contains(j.id)) {
+            if (a.equals(j) || a.SRG.contains(j.id)) {
                 a.utilityOfAll[index] = 0;
             } else {
                 a.utilityOfAll[index] = Utils.utility((SimEnvironment) state, a, j);
@@ -222,7 +217,7 @@ public class Agent implements Steppable {
         OvalPortrayal2D o = new OvalPortrayal2D(c);
         GUIStateSweep guiState = (GUIStateSweep) state.gui; //I don't quite understand here
         if (state.sparseSpace != null) { //if the groups are in a sparseGrid2D space
-            guiState.agentsPortrayalSparseGrid.setPortrayalForObject(this, o); //the second argument is color???
+            guiState.agentsPortrayalSparseGrid.setPortrayalForObject(this, o); 
         }
     }
 
@@ -272,28 +267,6 @@ public class Agent implements Steppable {
         return maxUtilityAgent;
     }
 
-    /*
-     * Find the lowest ranked agent among current STEP allies. 
-     * This agent might form alliance with others before his turn. 
-     * This agent need to release lower agent to make new friend.
-     * 
-     */
-//    public Agent stepLowestRanked(SimEnvironment state, Agent agent) {
-//        if (agent.currentStepAlliance.isEmpty() || agent.currentStepAlliance.size() == 0) {
-//            return null;
-//        }
-//        double utilityBase = 10000;
-//        Agent minUtilityAgent = null;
-//        for (int ca : agent.currentStepAlliance) {
-//            Agent currentAlly = state.allAgents.get(ca);
-//            double utilityOfcurrentAlly = Utils.utility(state, agent, currentAlly);
-//            if (utilityOfcurrentAlly < utilityBase) {
-//                minUtilityAgent = currentAlly;
-//                utilityBase = utilityOfcurrentAlly;
-//            }
-//        }
-//        return minUtilityAgent;
-//    }
     
     /*
      * Find the lowest ranked agent among current STATE allies. 
@@ -324,7 +297,7 @@ public class Agent implements Steppable {
      */
     public void provideOffer(SimEnvironment state) {
         boolean needMorePartners; //check if currentU is within the range
-        if (currentUtility(state, this) > 1.0 || currentUtility(state, this) < -1.0)
+        if (currentUtility(state, this) > 0.2 || currentUtility(state, this) < -0.2)
             needMorePartners = false;//if needMorePartners == false, then stop making friends
         else needMorePartners = true;
         int whileLoopNum = 0;
@@ -358,7 +331,7 @@ public class Agent implements Steppable {
                 acceptOffer((SimEnvironment) state, allyJ);
                 potentialAllies.remove(allyJ.id); //remove the highest ranked ally from potentialAllies list
             }
-            if (currentUtility(state, this) > 1.0 || currentUtility(state, this) < -1.0) needMorePartners = false;
+            if (currentUtility(state, this) > 0.2 || currentUtility(state, this) < -0.2) needMorePartners = false;
             else needMorePartners = true;
             whileLoopNum++;
         }
@@ -381,7 +354,7 @@ public class Agent implements Steppable {
                 //Situation 2 (Rejection): reject the offer because u_ji is less than zero (not worth to form alliance)
                 return false;
             } else { //u_ji is greater than 0, check if this allyJ need more friends
-                if (currentUtility(state, allyJ) <= 1.0 && currentUtility(state, allyJ) >= - 1.0) {  //need more friends
+                if (currentUtility(state, allyJ) <= 0.2 && currentUtility(state, allyJ) >= - 0.2) {  //need more friends
                     //accept the offer --> u_ji is greater than 0, and allyJ needs more allies
                 	//Situation 3 (Acceptance): Recipient accept the offer based on need.
                     this.currentStepAlliance.add(allyJ.id);

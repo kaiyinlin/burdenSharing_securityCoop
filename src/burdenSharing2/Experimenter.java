@@ -34,7 +34,10 @@ public class Experimenter extends Observer {
     boolean headerWritten_e = false;
     boolean headerWritten_u = false;
     boolean headerWritten_ALL = false;
+    boolean headerWritten_checking = false;
 
+    String[] header_variableChecking = {"step", "year", "state_i", "state_j", "EE_ij", "D_j", "NE_ij", "T_ijm", 
+    		"enemyI[]", "EE_kj[]", "S_kj[]", "NE_kj[]", "T_kjm[]", "R_j"};
     String[] header_ALL = {"step", "year", "state_i", "state_j", "cap_i", "cap_j", "cultureSim", "democ_i", "democ_j", "neighbor", "enemy", "ally_ij", "u_ij", "currentU", "commonAllianceSize"};
     int stateHasNoNewAllies; //a variable to detect whether the simulation is converged
 
@@ -77,6 +80,7 @@ public class Experimenter extends Observer {
 //            enemyMatrix(this.fileDirectory, (SimEnvironment) state);
 //            utilityMatrix(this.fileDirectory, (SimEnvironment) state);
             dataCollection(this.fileDirectory, (SimEnvironment) state);
+            variableChecking(this.fileDirectory, (SimEnvironment)state);
 
             // kill the simulation of continue to converge for two times
             System.out.println("stateHasNoNewAllies: " + stateHasNoNewAllies + "; Agents: " + ((SimEnvironment) state).agentIdList.size());
@@ -214,6 +218,82 @@ public class Experimenter extends Observer {
                 writer.append(Double.toString(a.currentUtility(state, a))); //i's currentU
                 writer.append(",");
                 writer.append(Integer.toString(commonAlliance(state, a, b))); //common alliance size between a and b
+                writer.append('\n');
+            }
+        }
+        writer.flush();
+        writer.close();
+    }
+    
+    public void variableChecking(String fileDirectory, SimEnvironment state) throws IOException{
+    	File variableCSVFile = new File(fileDirectory + state.year + "variableChecking.csv");
+    	if (!variableCSVFile.exists()) {
+            System.out.println("Let's create a new csv file for variable checking!");
+            variableCSVFile.createNewFile();
+        }
+    	FileWriter writer = new FileWriter(variableCSVFile.getAbsoluteFile(), true);
+    	if (headerWritten_checking == false) {
+            for (int i = 0; i < header_variableChecking.length; i++) {
+                if (i != 0) writer.append(",");
+                writer.append(header_variableChecking[i]);
+            }
+            writer.append('\n');
+        }
+        headerWritten_checking = true;
+        for (int i = 0; i < state.agentIdList.size(); i++) {
+            Agent a = state.getAgent(state.agentIdList.get(i));
+            for (int j = 0; j < state.agentIdList.size(); j++) {
+                Agent b = state.getAgent(state.agentIdList.get(j));
+                int bIndex = state.getIndex(b.id);
+                writer.append(Double.toString(state.schedule.getTime() + 1));
+                writer.append(",");
+                writer.append(Integer.toString(state.year)); //year
+                writer.append(",");
+                writer.append(Integer.toString(a.id));//i's id
+                writer.append(",");
+                writer.append(Integer.toString(b.id));//j's id
+                writer.append(",");
+                writer.append(Integer.toString(Utils.commonEnemy(state, a, b))); //Attraction: EE_ij
+                writer.append(",");
+                writer.append(Integer.toString(b.democracy));//Attraction: D_j - j's democracy
+                writer.append(",");
+                writer.append(Integer.toString(Utils.enemyNeighbor(state, a, b))); //Attraction: NE_ij
+                writer.append(",");
+                writer.append(Integer.toString(Utils.commonAlliance(state, a, b))); //Attraction: T_ijm
+                writer.append(",");
+                HashSet<Integer> allEnemies = (HashSet<Integer>) Utils.getAllEnemies((SimEnvironment) state, a.id); //i's enemies
+                Set<String> stringAllEnemies = allEnemies.stream().map(String::valueOf).collect(Collectors.toSet());
+                String joined = String.join("|", stringAllEnemies);
+                writer.append(joined);
+//                ArrayList<Integer> enemies = new ArrayList<Integer>();
+//                enemies.addAll(allEnemies);
+//                List<String> enemyList = enemies.stream().map(s -> String.valueOf(s)).collect(Collectors.toList());
+//                writer.append((CharSequence) enemyList);
+                writer.append(",");
+                List<String> EE_kj = new ArrayList<String>(); //prevention : EE_kj
+                List<String> S_kj = new ArrayList<String>(); //prevention : S_kj
+                List<String> NE_kj = new ArrayList<String>(); //prevention : NE_kj
+                List<String> T_kjm = new ArrayList<String>(); //prevention : T_kjm
+                for(int e : allEnemies) {
+                	Agent k = state.allAgents.get(e);
+                	EE_kj.add(String.valueOf(Utils.commonEnemy(state, k, b)));
+                	S_kj.add(String.valueOf(k.culture == b.culture ? 1:0));
+                	NE_kj.add(String.valueOf(Utils.enemyNeighbor(state, k, b)));
+                	T_kjm.add(String.valueOf(Utils.commonAlliance(state, k, b)));
+                }
+                String stringEE_kj = EE_kj.stream().collect(Collectors.joining("|"));
+                String stringS_kj = S_kj.stream().collect(Collectors.joining("|"));
+                String stringNE_kj = NE_kj.stream().collect(Collectors.joining("|"));
+                String stringT_kjm = T_kjm.stream().collect(Collectors.joining("|"));
+                writer.append(stringEE_kj);
+                writer.append(",");
+                writer.append(stringS_kj);
+                writer.append(",");
+                writer.append(stringNE_kj);
+                writer.append(",");
+                writer.append(stringT_kjm);
+                writer.append(",");
+                writer.append(Double.toString(Utils.trust(state, a, b)));
                 writer.append('\n');
             }
         }
