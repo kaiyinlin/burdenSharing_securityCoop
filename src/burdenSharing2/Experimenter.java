@@ -36,8 +36,9 @@ public class Experimenter extends Observer {
     boolean headerWritten_ALL = false;
     boolean headerWritten_checking = false;
 
-    String[] header_variableChecking = {"step", "year", "state_i", "state_j", "EE_ij", "D_j", "NE_ij", "T_ijm", 
-    		"enemyI[]", "EE_kj[]", "S_kj[]", "NE_kj[]", "T_kjm[]", "R_j"};
+    String[] header_variableChecking = {"step", "year", "state_i", "state_j", "EE_ij", "D_j", "NE_ij", "T_ijm",
+    		"i's allies", "j's alles", "commonAllies", "A_ij", 
+    		"enemyI[]", "EE_kj[]", "S_kj[]", "NE_kj[]", "T_kjm[]", "A_kj", "R_j"};
     String[] header_ALL = {"step", "year", "state_i", "state_j", "cap_i", "cap_j", "cultureSim", "democ_i", "democ_j", "neighbor", "enemy", "ally_ij", "u_ij", "currentU", "commonAllianceSize"};
     int stateHasNoNewAllies; //a variable to detect whether the simulation is converged
 
@@ -45,7 +46,7 @@ public class Experimenter extends Observer {
     double convergeStep = 0;
     int converge = 0;
     int CONV_MAX = 2;  // need to continuous to converge for two times in order to terminate the simulation
-    int MAX_ROUND = 15;
+    int MAX_ROUND = 9;
 
     /*
      * set fileDirectory
@@ -261,6 +262,24 @@ public class Experimenter extends Observer {
                 writer.append(",");
                 writer.append(Integer.toString(Utils.commonAlliance(state, a, b))); //Attraction: T_ijm
                 writer.append(",");
+                Set<Integer> allianceA = Utils.getCurrentStateAlliance(state, a.id);
+                Set<Integer> allianceB = Utils.getCurrentStateAlliance(state, b.id);
+                Set<Integer> intersection = allianceA.stream().distinct().filter(allianceB::contains).collect(Collectors.toSet());
+                Set<String> AStringSet = allianceA.stream().map(String::valueOf).collect(Collectors.toSet());
+                Set<String> BStringSet = allianceB.stream().map(String::valueOf).collect(Collectors.toSet());
+                Set<String> stringSet = intersection.stream().map(String::valueOf).collect(Collectors.toSet());
+                String AJoined = String.join("|", AStringSet);
+                String BJoined = String.join("|", BStringSet);
+                String intersectionJoined = String.join("|", stringSet);
+                writer.append(AJoined); //print out A's allies
+                writer.append(",");
+                writer.append(BJoined); //print out B's allies
+                writer.append(",");
+                writer.append(intersectionJoined); //print out common alliance members
+                writer.append(",");
+                writer.append(Double.toString(Utils.attractiveness(state, a, b))); //Attraction: A_ij
+                writer.append(",");
+                
                 HashSet<Integer> allEnemies = (HashSet<Integer>) Utils.getAllEnemies((SimEnvironment) state, a.id); //i's enemies
                 Set<String> stringAllEnemies = allEnemies.stream().map(String::valueOf).collect(Collectors.toSet());
                 String joined = String.join("|", stringAllEnemies);
@@ -293,7 +312,9 @@ public class Experimenter extends Observer {
                 writer.append(",");
                 writer.append(stringT_kjm);
                 writer.append(",");
-                writer.append(Double.toString(Utils.trust(state, a, b)));
+                writer.append(Double.toString(Utils.prevention(state, a, b))); //Prevention: A_kj
+                writer.append(",");
+                writer.append(Double.toString(Utils.trust(state, a, b))); //Trust
                 writer.append('\n');
             }
         }
